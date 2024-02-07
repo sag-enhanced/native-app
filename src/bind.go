@@ -14,6 +14,9 @@ import (
 func (app *App) initBindings() {
 	app.webview.Bind("sage", func(method string, call_id int, params string) error {
 		handler, ok := app.bindings[method]
+		if app.options.Verbose {
+			fmt.Println("RPC call:", method, call_id, params)
+		}
 
 		if !ok {
 			return errors.New("invalid method: " + method)
@@ -22,7 +25,7 @@ func (app *App) initBindings() {
 			result, err := handler(params)
 			if err != nil {
 				app.webview.Dispatch(func() {
-					app.webview.Eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", call_id, err.Error(), call_id))
+					app.eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", call_id, err.Error(), call_id))
 				})
 				return
 			}
@@ -30,15 +33,24 @@ func (app *App) initBindings() {
 			if err != nil {
 				fmt.Println("Failed to marshal result of RPC function", method, err)
 				app.webview.Dispatch(func() {
-					app.webview.Eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", call_id, call_id))
+					app.eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", call_id, call_id))
 				})
 				return
 			}
 			app.webview.Dispatch(func() {
-				app.webview.Eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", call_id, string(encoded), call_id))
+				app.eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", call_id, string(encoded), call_id))
 			})
 		}()
 		return nil
+	})
+}
+
+func (app *App) eval(script string) {
+	if app.options.Verbose {
+		fmt.Println("Evaluating:", script)
+	}
+	app.webview.Dispatch(func() {
+		app.webview.Eval(script)
 	})
 }
 

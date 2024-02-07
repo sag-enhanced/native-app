@@ -18,6 +18,7 @@ type App struct {
 
 type Options struct {
 	Debug       bool
+	Verbose     bool
 	Local       bool
 	OpenCommand string
 }
