@@ -1,0 +1,77 @@
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  linux:
+    name: Release Linux Binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Install webview dependencies
+        run: sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
+      - name: Build
+        run: |
+          go build -ldflags="-s -w" -o bin/sage-linux-amd64 .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sage-linux-amd64
+          path: ./bin/sage-linux-*
+          if-no-files-found: error
+      - if: github.event_name == 'release'
+        name: Upload assets to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./bin/sage-linux-*
+          file_glob: true
+
+  windows:
+    name: Release Windows Binary
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Build
+        run: |
+          go build -ldflags="-s -w" -o bin/sage-windows-amd64.exe .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sage-windows-amd64
+          path: ./bin/sage-windows-*
+          if-no-files-found: error
+      - if: github.event_name == 'release'
+        name: Upload assets to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./bin/sage-windows-*
+          file_glob: true
+
+  darwin:
+    name: Release Darwin Binary
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Build
+        run: |
+          go build -ldflags="-s -w" -o bin/sage-darwin-amd64 .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sage-darwin-amd64
+          path: ./bin/sage-darwin-*
+          if-no-files-found: error
+      - if: github.event_name == 'release'
+        name: Upload assets to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./bin/sage-darwin-*
+          file_glob: true
