@@ -20,7 +20,7 @@ type Options struct {
 	Debug       bool
 	Verbose     bool
 	Local       bool
-	OpenCommand string
+	OpenCommand []string
 }
 
 func NewApp(options Options) *App {

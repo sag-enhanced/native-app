@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/sag-enhanced/native-app/src"
@@ -12,12 +13,19 @@ import (
 func main() {
 	var remoteSession string
 	var options app.Options
+	var openCommand string
 	flag.StringVar(&remoteSession, "remote", "", "Allow remote debugging with the specified session ID.")
 	flag.BoolVar(&options.Debug, "debug", false, "Enable devtools and verbose logging")
 	flag.BoolVar(&options.Local, "local", false, "Run the app in local mode")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
-	flag.StringVar(&options.OpenCommand, "open", app.GetDefaultOpenCommand(), "Command to open URLs")
+	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
 	flag.Parse()
+
+	if openCommand != "" {
+		options.OpenCommand = strings.Split(openCommand, " ")
+	} else {
+		options.OpenCommand = app.GetDefaultOpenCommand()
+	}
 
 	if remoteSession != "" {
 		var allow string

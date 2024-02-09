@@ -5,13 +5,16 @@ import (
 	"runtime"
 )
 
-func GetDefaultOpenCommand() string {
+func GetDefaultOpenCommand() []string {
 	if runtime.GOOS == "windows" {
-		return "explorer"
+		return []string{"rundll32", "url.dll,FileProtocolHandler"}
+	} else if runtime.GOOS == "darwin" {
+		return []string{"open"}
 	}
-	return "open"
+	return []string{"xdg-open"}
 }
 
 func (app App) open(url string) {
-	exec.Command(app.options.OpenCommand, url).Run()
+	args := append(app.options.OpenCommand, url)
+	exec.Command(args[0], args[1:]...).Run()
 }
