@@ -22,14 +22,17 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 	args := []string{
 		// this unsets navigator.webdriver, which is used to detect automation
 		"--disable-blink-features=AutomationControlled",
+		// minimum window size that works with the recaptcha popup shown
 		"--window-size=440,720",
+		// force the language to english for nopecha
+		"--lang=en",
 	}
 	extensions, err := getExtensionList()
 	if err != nil {
 		return err
 	}
 	for _, extension := range extensions {
-		// dont ask me why we have to do this
+		// dont ask me why we have to do this twice
 		args = append(args, "--disable-extensions-except="+extension)
 		args = append(args, "--load-extension="+extension)
 	}
