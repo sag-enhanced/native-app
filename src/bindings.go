@@ -318,7 +318,11 @@ func (app *App) registerBindings() {
 		chout := make(chan string, 5) // allow up to 5 captchas to be buffered at once
 		var proxy_url *url.URL
 		if proxy != nil {
-			proxy_url, _ = url.Parse(*proxy) // we dont really care about errors here
+			parsed_proxy_url, err := url.Parse(*proxy)
+			if err != nil {
+				return "", err
+			}
+			proxy_url = parsed_proxy_url
 		}
 
 		// playwright isnt thread-safe, so we will need to make a lot of
