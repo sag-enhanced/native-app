@@ -12,13 +12,16 @@ import (
 
 func installPlaywright() error {
 	fmt.Println("Note the following browser related messages are from playwright. This may take a while if it's the first time.")
+	// technically we also support firefox, but as its not the default, it will likely not be used
+	// as much and thus we dont install it by default
+	// this is no issue, as playwright will install it on demand anyway
 	return playwright.Install(&playwright.RunOptions{
 		Browsers: []string{"chromium"},
 		Verbose:  true,
 	})
 }
 
-func runPlaywright(chint chan string, chout chan string, url string, code string, proxy *url.URL) error {
+func runPlaywright(chint chan string, chout chan string, url string, code string, browser_name string, proxy *url.URL) error {
 	args := []string{
 		// this unsets navigator.webdriver, which is used to detect automation
 		"--disable-blink-features=AutomationControlled",
@@ -27,7 +30,7 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		// force the language to english for nopecha
 		"--lang=en",
 	}
-	extensions, err := getExtensionList()
+	extensions, err := getExtensionList(browser_name)
 	if err != nil {
 		return err
 	}
@@ -62,8 +65,14 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		}
 	}
 
-	profile := path.Join(getStoragePath(), "pw-profile")
-	browser, err := pw.Chromium.LaunchPersistentContext(profile, playwright.BrowserTypeLaunchPersistentContextOptions{
+	profile_name := "pw-profile"
+	if browser_name != "chromium" {
+		profile_name += "-" + browser_name
+	}
+
+	profile_path := path.Join(getStoragePath(), profile_name)
+	var browser playwright.BrowserContext
+	options := playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
 		Args:     args,
 		IgnoreDefaultArgs: []string{
@@ -76,7 +85,12 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 			Height: 620,
 		},
 		Proxy: playwright_proxy,
-	})
+	}
+	if browser_name == "chromium" {
+		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, options)
+	} else {
+		browser, err = pw.Firefox.LaunchPersistentContext(profile_path, options)
+	}
 
 	if err != nil {
 		return err
@@ -127,8 +141,8 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 	return nil
 }
 
-func getExtensionList() ([]string, error) {
-	ext := path.Join(getStoragePath(), "ext")
+func getExtensionList(browser string) ([]string, error) {
+	ext := path.Join(getStoragePath(), "ext", browser)
 	files, err := os.ReadDir(ext)
 	extensions := []string{}
 	if err != nil {

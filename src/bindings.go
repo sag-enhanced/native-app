@@ -235,8 +235,8 @@ func (app *App) registerBindings() {
 		delete(clientHandles, handle)
 	})
 
-	app.bind("ext", func() (*map[string]string, error) {
-		dir := path.Join(getStoragePath(), "ext")
+	app.bind("ext", func(browser string) (*map[string]string, error) {
+		dir := path.Join(getStoragePath(), "ext", browser)
 		extensions := map[string]string{}
 		files, err := os.ReadDir(dir)
 		// probably directory doesnt exist, so no extensions
@@ -264,7 +264,7 @@ func (app *App) registerBindings() {
 		return &extensions, nil
 	})
 
-	app.bind("extInstall", func(name string, download string) error {
+	app.bind("extInstall", func(name string, browser string, download string) error {
 		if !strings.HasPrefix(download, "https://github.com/") || strings.Contains(download, "..") {
 			return errors.New("invalid download URL")
 		}
@@ -272,46 +272,17 @@ func (app *App) registerBindings() {
 			return errors.New("invalid extension name")
 		}
 
-		installExtensionFromGithub(name, download)
+		installExtensionFromGithub(name, browser, download)
 
 		return nil
 	})
 
-	// deprecated; prolly removed in b2
-	app.bind("extNopecha", func(key string) error {
-		if len(key) > 100 {
-			return errors.New("key too long")
-		}
-
-		manifest := path.Join(getStoragePath(), "ext", "nopecha", "manifest.json")
-		data, err := os.ReadFile(manifest)
-		if err != nil {
-			return err
-		}
-
-		var parsedManifest map[string]any
-		err = json.Unmarshal(data, &parsedManifest)
-		if err != nil {
-			return err
-		}
-
-		nopecha := parsedManifest["nopecha"].(map[string]any)
-		nopecha["key"] = key
-
-		encoded, err := json.Marshal(parsedManifest)
-		if err != nil {
-			return err
-		}
-
-		return os.WriteFile(manifest, encoded, 0644)
-	})
-
-	app.bind("extGetManifest", func(name string) (string, error) {
+	app.bind("extGetManifest", func(name string, browser string) (string, error) {
 		if strings.Contains(name, "..") {
 			return "", errors.New("invalid extension name")
 		}
 
-		manifest := path.Join(getStoragePath(), "ext", name, "manifest.json")
+		manifest := path.Join(getStoragePath(), "ext", browser, name, "manifest.json")
 
 		data, err := os.ReadFile(manifest)
 		if err != nil {
@@ -320,21 +291,21 @@ func (app *App) registerBindings() {
 		return string(data), nil
 	})
 
-	app.bind("extSetManifest", func(name string, manifest string) error {
+	app.bind("extSetManifest", func(name string, browser string, manifest string) error {
 		if strings.Contains(name, "..") {
 			return errors.New("invalid extension name")
 		}
 
-		manifestPath := path.Join(getStoragePath(), "ext", name, "manifest.json")
+		manifestPath := path.Join(getStoragePath(), "ext", browser, name, "manifest.json")
 		return os.WriteFile(manifestPath, []byte(manifest), 0644)
 	})
 
-	app.bind("extUninstall", func(name string) error {
+	app.bind("extUninstall", func(name string, browser string) error {
 		if strings.Contains(name, "..") {
 			return errors.New("invalid extension name")
 		}
 
-		dir := path.Join(getStoragePath(), "ext", name)
+		dir := path.Join(getStoragePath(), "ext", browser, name)
 		return os.RemoveAll(dir)
 	})
 
@@ -342,7 +313,7 @@ func (app *App) registerBindings() {
 
 	playwrightInHandles := map[string]chan string{}
 	playwrightOutHandles := map[string]chan string{}
-	app.bind("playwrightNew", func(page_url string, code string, proxy *string) (string, error) {
+	app.bind("playwrightNew", func(page_url string, code string, browser string, proxy *string) (string, error) {
 		raw_handle := make([]byte, 16)
 		if _, err := rand.Read(raw_handle); err != nil {
 			return "", err
@@ -363,7 +334,7 @@ func (app *App) registerBindings() {
 
 		// playwright isnt thread-safe, so we will need to make a lot of
 		// dirty hacks to keep everything in this one goroutine
-		go runPlaywright(chint, chout, page_url, code, proxy_url)
+		go runPlaywright(chint, chout, page_url, code, browser, proxy_url)
 
 		playwrightInHandles[handle] = chint
 		playwrightOutHandles[handle] = chout
@@ -398,6 +369,16 @@ func (app *App) registerBindings() {
 		fmt.Println("Destroying playwright instance with handle", handle)
 		chint <- "quit"
 		delete(playwrightInHandles, handle)
+	})
+
+	app.bind("playwrightDestroyProfile", func(browser string) error {
+		profile_name := "pw-profile"
+		if browser != "chromium" {
+			profile_name += "-" + browser
+		}
+		dir := path.Join(getStoragePath(), profile_name)
+
+		return os.RemoveAll(dir)
 	})
 
 	app.bind("quit", func() {

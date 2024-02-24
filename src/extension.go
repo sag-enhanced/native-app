@@ -10,7 +10,7 @@ import (
 	"path"
 )
 
-func installExtensionFromGithub(name string, download string) error {
+func installExtensionFromGithub(name string, browser string, download string) error {
 	resp, err := http.Get(download)
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func installExtensionFromGithub(name string, download string) error {
 		return fmt.Errorf("HTTP request returned %d", resp.StatusCode)
 	}
 
-	dir := path.Join(getStoragePath(), "ext", name)
+	dir := path.Join(getStoragePath(), "ext", browser, name)
 
 	os.MkdirAll(dir, 0755)
 
