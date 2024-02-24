@@ -72,11 +72,14 @@ func (app *App) bind(name string, f interface{}) error {
 		}
 		isVariadic := v.Type().IsVariadic()
 		numIn := v.Type().NumIn()
-		if (isVariadic && len(raw) < numIn-1) || (!isVariadic && len(raw) != numIn) {
+		if (isVariadic && len(raw) < numIn-1) || (!isVariadic && len(raw) < numIn) {
 			return nil, errors.New("wrong number of arguments")
 		}
 		args := []reflect.Value{}
 		for i := range raw {
+			if !isVariadic && i >= numIn {
+				break
+			}
 			var arg reflect.Value
 			if isVariadic && i >= numIn-1 {
 				arg = reflect.New(v.Type().In(numIn - 1).Elem())
