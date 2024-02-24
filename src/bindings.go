@@ -15,10 +15,12 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/shirou/gopsutil/v3/process"
 	"github.com/sqweek/dialog"
 )
@@ -379,6 +381,20 @@ func (app *App) registerBindings() {
 		dir := path.Join(getStoragePath(), profile_name)
 
 		return os.RemoveAll(dir)
+	})
+
+	app.bind("info", func() (map[string]any, error) {
+		id, err := machineid.ID()
+		if err != nil {
+			return nil, err
+		}
+		return map[string]any{
+			"build": build,
+			"path":  getStoragePath(),
+			"os":    runtime.GOOS,
+			"arch":  runtime.GOARCH,
+			"id":    id,
+		}, nil
 	})
 
 	app.bind("quit", func() {

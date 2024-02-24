@@ -3,6 +3,7 @@ module github.com/sag-enhanced/native-app
 go 1.21
 
 require (
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/playwright-community/playwright-go v0.4101.1
 	github.com/shirou/gopsutil/v3 v3.24.1
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
