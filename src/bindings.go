@@ -277,6 +277,7 @@ func (app *App) registerBindings() {
 		return nil
 	})
 
+	// deprecated; prolly removed in b2
 	app.bind("extNopecha", func(key string) error {
 		if len(key) > 100 {
 			return errors.New("key too long")
@@ -303,6 +304,29 @@ func (app *App) registerBindings() {
 		}
 
 		return os.WriteFile(manifest, encoded, 0644)
+	})
+
+	app.bind("extGetManifest", func(name string) (string, error) {
+		if strings.Contains(name, "..") {
+			return "", errors.New("invalid extension name")
+		}
+
+		manifest := path.Join(getStoragePath(), "ext", name, "manifest.json")
+
+		data, err := os.ReadFile(manifest)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	})
+
+	app.bind("extSetManifest", func(name string, manifest string) error {
+		if strings.Contains(name, "..") {
+			return errors.New("invalid extension name")
+		}
+
+		manifestPath := path.Join(getStoragePath(), "ext", name, "manifest.json")
+		return os.WriteFile(manifestPath, []byte(manifest), 0644)
 	})
 
 	app.bind("extUninstall", func(name string) error {
