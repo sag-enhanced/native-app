@@ -56,6 +56,10 @@ func (app *App) registerBindings() {
 		return os.WriteFile(path, []byte(data), 0644)
 	})
 
+	app.bind("alert", func(message string) {
+		dialog.Message(message).Title("Alert").Info()
+	})
+
 	app.bind("steamDesktopLogin", func(username string, password string) error {
 		// to login in the desktop client, we start it with the -login launch option
 		// however, we first need to kill any existing steam processes
