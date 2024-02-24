@@ -119,7 +119,7 @@ func (app *App) registerBindings() {
 	app.bind("set", func(key string, value string) error {
 		file := path.Join(getStoragePath(), key+".dat")
 		if key == "accounts" {
-			if stat, err := os.Stat(file); err == nil && int(stat.Size()) > len(value) {
+			if stat, err := os.Stat(file); err == nil && int(stat.Size()) > len(value) && stat.Size() > 100 {
 				fmt.Println("New value is smaller than the old one, refusing to overwrite")
 				fmt.Println("Old size:", stat.Size(), "New size:", len(value))
 				fmt.Println("This is a bug (that could've nuked your accounts!), please report it")
