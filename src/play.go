@@ -10,6 +10,12 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
+const (
+	// minimum window size that works with the recaptcha popup shown
+	WIDTH  = 440
+	HEIGHT = 620
+)
+
 func installPlaywright() error {
 	fmt.Println("Note the following browser related messages are from playwright. This may take a while if it's the first time.")
 	// technically we also support firefox, but as its not the default, it will likely not be used
@@ -22,14 +28,17 @@ func installPlaywright() error {
 }
 
 func runPlaywright(chint chan string, chout chan string, url string, code string, browser_name string, proxy *url.URL) error {
-	args := []string{
+	args := []string{}
+	if browser_name == "chromium" {
 		// this unsets navigator.webdriver, which is used to detect automation
-		"--disable-blink-features=AutomationControlled",
-		// minimum window size that works with the recaptcha popup shown
-		"--window-size=440,720",
-		// force the language to english for nopecha
-		"--lang=en",
+		args = append(args, "--disable-blink-features=AutomationControlled")
+		args = append(args, fmt.Sprintf("--window-size=%d,%d", WIDTH, HEIGHT))
+	} else {
+		// unsetting navigator.webdriver is not required in firefox
+		args = append(args, fmt.Sprintf("--width=%d", WIDTH))
+		args = append(args, fmt.Sprintf("--height=%d", HEIGHT))
 	}
+
 	extensions, err := getExtensionList(browser_name)
 	if err != nil {
 		return err
@@ -76,15 +85,16 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		Headless: playwright.Bool(false),
 		Args:     args,
 		IgnoreDefaultArgs: []string{
-			// disables "Chrome is being controlled by automated test software"
+			// disables "Chrome is being controlled by automated test software" banner
 			"--enable-automation",
 		},
 		NoViewport: playwright.Bool(true),
 		Viewport: &playwright.Size{
-			Width:  440,
-			Height: 620,
+			Width:  WIDTH,
+			Height: HEIGHT,
 		},
-		Proxy: playwright_proxy,
+		Proxy:  playwright_proxy,
+		Locale: playwright.String("en"),
 	}
 	if browser_name == "chromium" {
 		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, options)
