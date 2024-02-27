@@ -94,7 +94,7 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 			Height: HEIGHT,
 		},
 		Proxy:  playwright_proxy,
-		Locale: playwright.String("en"),
+		Locale: playwright.String("en-US"),
 	}
 	if browser_name == "chromium" {
 		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, options)
