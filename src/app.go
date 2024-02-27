@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -17,20 +16,15 @@ type App struct {
 }
 
 type Options struct {
-	Debug       bool
 	Verbose     bool
 	Local       bool
 	OpenCommand []string
 }
 
 func NewApp(options Options) *App {
-	if options.Debug {
-		fmt.Println("Storage location:", getStoragePath())
-	}
-
 	installPlaywright()
 
-	webview := webview.New(options.Debug)
+	webview := webview.New(true)
 
 	os.MkdirAll(getStoragePath(), 0755)
 

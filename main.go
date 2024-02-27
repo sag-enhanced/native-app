@@ -15,7 +15,6 @@ func main() {
 	var options app.Options
 	var openCommand string
 	flag.StringVar(&remoteSession, "remote", "", "Allow remote debugging with the specified session ID.")
-	flag.BoolVar(&options.Debug, "debug", false, "Enable devtools and verbose logging")
 	flag.BoolVar(&options.Local, "local", false, "Run the app in local mode")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
@@ -37,9 +36,6 @@ func main() {
 			fmt.Println("Aborted.")
 			return
 		}
-	}
-	if options.Debug {
-		fmt.Println("Debug mode enabled.")
 	}
 
 	app := app.NewApp(options)

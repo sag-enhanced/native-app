@@ -400,12 +400,6 @@ func (app *App) registerBindings() {
 	app.bind("quit", func() {
 		app.webview.Dispatch(app.webview.Terminate)
 	})
-
-	if app.options.Debug {
-		// the webview can detect the presence of this binding and increase log verbosity
-		// without having to do any RPC calls
-		app.webview.Bind("DEBUGGER", func() {})
-	}
 }
 
 type HTTPResponse struct {
