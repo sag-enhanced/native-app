@@ -27,7 +27,7 @@ func installPlaywright() error {
 	})
 }
 
-func runPlaywright(chint chan string, chout chan string, url string, code string, browser_name string, proxy *url.URL) error {
+func runPlaywright(chint chan string, chout chan string, url string, code string, browser_name string, proxy *url.URL, options Options) error {
 	args := []string{}
 	if browser_name == "chromium" {
 		// this unsets navigator.webdriver, which is used to detect automation
@@ -49,7 +49,9 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		args = append(args, "--load-extension="+extension)
 	}
 
-	fmt.Println("Running playwright with args", args)
+	if options.Verbose {
+		fmt.Println("Running playwright with args", args)
+	}
 
 	pw, err := playwright.Run()
 	if err != nil {
@@ -81,7 +83,7 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 
 	profile_path := path.Join(getStoragePath(), profile_name)
 	var browser playwright.BrowserContext
-	options := playwright.BrowserTypeLaunchPersistentContextOptions{
+	playwrightOptions := playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
 		Args:     args,
 		IgnoreDefaultArgs: []string{
@@ -97,9 +99,9 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		Locale: playwright.String("en-US"),
 	}
 	if browser_name == "chromium" {
-		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, options)
+		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, playwrightOptions)
 	} else {
-		browser, err = pw.Firefox.LaunchPersistentContext(profile_path, options)
+		browser, err = pw.Firefox.LaunchPersistentContext(profile_path, playwrightOptions)
 	}
 
 	if err != nil {
@@ -107,6 +109,23 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 	}
 	defer browser.Close()
 
+	fullyLoaded := false
+	browser.OnClose(func(_ playwright.BrowserContext) {
+		if options.Verbose {
+			fmt.Println("Browser closed")
+		}
+		if fullyLoaded {
+			chint <- "quit"
+		} else {
+			chout <- "closed"
+			fmt.Println("Browser was closed before it was fully loaded, this is likely caused by a bad proxy.")
+			fmt.Println("This is a memory leak which we can't currently fix, so please don't do this too often.")
+		}
+	})
+
+	if options.Verbose {
+		fmt.Println("Browser running; waiting for page")
+	}
 	page, err := browser.NewPage()
 	if err != nil {
 		return err
@@ -117,8 +136,14 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		Content: playwright.String(code),
 	})
 
+	if options.Verbose {
+		fmt.Println("Navigating to", url)
+	}
 	if _, err := page.Goto(url); err != nil {
 		return err
+	}
+	if options.Verbose {
+		fmt.Println("Waiting for page to load")
 	}
 	if err := page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
 		State: playwright.LoadStateDomcontentloaded,
@@ -128,7 +153,9 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 
 	page.OnDialog(func(d playwright.Dialog) {
 		message := d.Message()
-		fmt.Println("Dialog:", message)
+		if options.Verbose {
+			fmt.Println("Dialog:", message)
+		}
 		if strings.HasPrefix(message, "SAGE#") {
 			chout <- message[5:]
 		}
@@ -136,10 +163,17 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 	})
 
 	page.OnClose(func(_ playwright.Page) {
-		fmt.Println("Page closed")
+		if options.Verbose {
+			fmt.Println("Page closed")
+		}
 		chint <- "quit"
 	})
 
+	fullyLoaded = true
+
+	if options.Verbose {
+		fmt.Println("Page loaded")
+	}
 	for {
 		msg := <-chint
 		if msg == "quit" {

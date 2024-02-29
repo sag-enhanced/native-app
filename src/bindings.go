@@ -336,7 +336,7 @@ func (app *App) registerBindings() {
 
 		// playwright isnt thread-safe, so we will need to make a lot of
 		// dirty hacks to keep everything in this one goroutine
-		go runPlaywright(chint, chout, page_url, code, browser, proxy_url)
+		go runPlaywright(chint, chout, page_url, code, browser, proxy_url, app.options)
 
 		playwrightInHandles[handle] = chint
 		playwrightOutHandles[handle] = chout
