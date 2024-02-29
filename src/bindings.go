@@ -147,8 +147,8 @@ func (app *App) registerBindings() {
 
 	clientHandles := map[string]http.Client{}
 	app.bind("httpClient", func(proxyUrl *string) (string, error) {
-		raw_handle := make([]byte, 16)
-		if _, err := rand.Read(raw_handle); err != nil {
+		rawHandle := make([]byte, 16)
+		if _, err := rand.Read(rawHandle); err != nil {
 			return "", err
 		}
 		jar, err := cookiejar.New(nil)
@@ -164,7 +164,7 @@ func (app *App) registerBindings() {
 			proxy = http.ProxyURL(parsedProxyUrl)
 		}
 
-		handle := fmt.Sprintf("%x", raw_handle)
+		handle := fmt.Sprintf("%x", rawHandle)
 		if app.options.Verbose {
 			fmt.Println("Created new HTTP client with handle", handle)
 		}
@@ -329,30 +329,30 @@ func (app *App) registerBindings() {
 
 	playwrightInHandles := map[string]chan string{}
 	playwrightOutHandles := map[string]chan string{}
-	app.bind("playwrightNew", func(page_url string, code string, browser string, proxy *string) (string, error) {
-		raw_handle := make([]byte, 16)
-		if _, err := rand.Read(raw_handle); err != nil {
+	app.bind("playwrightNew", func(pageUrl string, code string, browser string, proxy *string) (string, error) {
+		rawHandle := make([]byte, 16)
+		if _, err := rand.Read(rawHandle); err != nil {
 			return "", err
 		}
-		handle := fmt.Sprintf("%x", raw_handle)
+		handle := fmt.Sprintf("%x", rawHandle)
 		if app.options.Verbose {
 			fmt.Println("Created new playwright instance with handle", handle)
 		}
 
-		chint := make(chan string, 1) // only need to send quit once
-		chout := make(chan string, 5) // allow up to 5 captchas to be buffered at once
-		var proxy_url *url.URL
+		chint := make(chan string, 5)
+		chout := make(chan string, 5)
+		var proxyUrl *url.URL
 		if proxy != nil {
-			parsed_proxy_url, err := url.Parse(*proxy)
+			parsedProxyUrl, err := url.Parse(*proxy)
 			if err != nil {
 				return "", err
 			}
-			proxy_url = parsed_proxy_url
+			proxyUrl = parsedProxyUrl
 		}
 
 		// playwright isnt thread-safe, so we will need to make a lot of
 		// dirty hacks to keep everything in this one goroutine
-		go runPlaywright(chint, chout, page_url, code, browser, proxy_url, app.options)
+		go runPlaywright(chint, chout, pageUrl, code, browser, proxyUrl, app.options)
 
 		playwrightInHandles[handle] = chint
 		playwrightOutHandles[handle] = chout
@@ -392,11 +392,11 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("playwrightDestroyProfile", func(browser string) error {
-		profile_name := "pw-profile"
+		profileName := "pw-profile"
 		if browser != "chromium" {
-			profile_name += "-" + browser
+			profileName += "-" + browser
 		}
-		dir := path.Join(getStoragePath(), profile_name)
+		dir := path.Join(getStoragePath(), profileName)
 
 		return os.RemoveAll(dir)
 	})

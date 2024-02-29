@@ -38,18 +38,18 @@ func installExtensionFromGithub(name string, browser string, download string) er
 		if file.FileInfo().IsDir() {
 			os.MkdirAll(path.Join(dir, file.Name), 0755)
 		} else {
-			new_file, err := os.OpenFile(path.Join(dir, file.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+			newFile, err := os.OpenFile(path.Join(dir, file.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
 			if err != nil {
 				return err
 			}
-			zip_file, err := file.Open()
+			zipFile, err := file.Open()
 			if err != nil {
 				return err
 			}
 
-			_, err = io.Copy(new_file, zip_file)
-			new_file.Close()
-			zip_file.Close()
+			_, err = io.Copy(newFile, zipFile)
+			newFile.Close()
+			zipFile.Close()
 		}
 	}
 

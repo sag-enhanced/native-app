@@ -12,10 +12,10 @@ import (
 // functions that take a while to complete (eg make a network request)
 
 func (app *App) initBindings() {
-	app.webview.Bind("sage", func(method string, call_id int, params string) error {
+	app.webview.Bind("sage", func(method string, callId int, params string) error {
 		handler, ok := app.bindings[method]
 		if app.options.Verbose {
-			fmt.Println("RPC call:", method, call_id, params)
+			fmt.Println("RPC call:", method, callId, params)
 		}
 
 		if !ok {
@@ -25,7 +25,7 @@ func (app *App) initBindings() {
 			result, err := handler(params)
 			if err != nil {
 				app.webview.Dispatch(func() {
-					app.eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", call_id, err.Error(), call_id))
+					app.eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", callId, err.Error(), callId))
 				})
 				return
 			}
@@ -33,12 +33,12 @@ func (app *App) initBindings() {
 			if err != nil {
 				fmt.Println("Failed to marshal result of RPC function", method, err)
 				app.webview.Dispatch(func() {
-					app.eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", call_id, call_id))
+					app.eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", callId, callId))
 				})
 				return
 			}
 			app.webview.Dispatch(func() {
-				app.eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", call_id, string(encoded), call_id))
+				app.eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", callId, string(encoded), callId))
 			})
 		}()
 		return nil

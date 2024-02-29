@@ -27,9 +27,9 @@ func installPlaywright() error {
 	})
 }
 
-func runPlaywright(chint chan string, chout chan string, url string, code string, browser_name string, proxy *url.URL, options Options) error {
+func runPlaywright(chint chan string, chout chan string, url string, code string, browserName string, proxy *url.URL, options Options) error {
 	args := []string{}
-	if browser_name == "chromium" {
+	if browserName == "chromium" {
 		// this unsets navigator.webdriver, which is used to detect automation
 		args = append(args, "--disable-blink-features=AutomationControlled")
 		args = append(args, fmt.Sprintf("--window-size=%d,%d", WIDTH, HEIGHT))
@@ -39,7 +39,7 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		args = append(args, fmt.Sprintf("--height=%d", HEIGHT))
 	}
 
-	extensions, err := getExtensionList(browser_name)
+	extensions, err := getExtensionList(browserName)
 	if err != nil {
 		return err
 	}
@@ -59,29 +59,29 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 	}
 	defer pw.Stop()
 
-	var playwright_proxy *playwright.Proxy
+	var playwrightProxy *playwright.Proxy
 	if proxy != nil {
 		var username, password *string
 		if proxy.User != nil {
 			username = playwright.String(proxy.User.Username())
-			temp_password, ok := proxy.User.Password()
+			tempPassword, ok := proxy.User.Password()
 			if ok {
-				password = &temp_password
+				password = &tempPassword
 			}
 		}
-		playwright_proxy = &playwright.Proxy{
+		playwrightProxy = &playwright.Proxy{
 			Server:   proxy.Scheme + "://" + proxy.Host,
 			Username: username,
 			Password: password,
 		}
 	}
 
-	profile_name := "pw-profile"
-	if browser_name != "chromium" {
-		profile_name += "-" + browser_name
+	profileName := "pw-profile"
+	if browserName != "chromium" {
+		profileName += "-" + browserName
 	}
 
-	profile_path := path.Join(getStoragePath(), profile_name)
+	profilePath := path.Join(getStoragePath(), profileName)
 	var browser playwright.BrowserContext
 	playwrightOptions := playwright.BrowserTypeLaunchPersistentContextOptions{
 		Headless: playwright.Bool(false),
@@ -95,13 +95,13 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 			Width:  WIDTH,
 			Height: HEIGHT,
 		},
-		Proxy:  playwright_proxy,
+		Proxy:  playwrightProxy,
 		Locale: playwright.String("en-US"),
 	}
-	if browser_name == "chromium" {
-		browser, err = pw.Chromium.LaunchPersistentContext(profile_path, playwrightOptions)
+	if browserName == "chromium" {
+		browser, err = pw.Chromium.LaunchPersistentContext(profilePath, playwrightOptions)
 	} else {
-		browser, err = pw.Firefox.LaunchPersistentContext(profile_path, playwrightOptions)
+		browser, err = pw.Firefox.LaunchPersistentContext(profilePath, playwrightOptions)
 	}
 
 	if err != nil {

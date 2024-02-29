@@ -50,11 +50,11 @@ func (app App) findSteamExecutable() (string, error) {
 }
 
 func findSteamProcess() (*process.Process, error) {
-	process_list, err := process.Processes()
+	processList, err := process.Processes()
 	if err != nil {
 		return nil, err
 	}
-	for _, p := range process_list {
+	for _, p := range processList {
 		name, err := p.Name()
 		if err != nil {
 			continue
