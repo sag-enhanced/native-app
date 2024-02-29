@@ -70,23 +70,31 @@ func (app *App) registerBindings() {
 			return err
 		}
 
-		fmt.Println("Steam executable found at", exe)
+		if app.options.Verbose {
+			fmt.Println("Steam executable found at", exe)
+		}
 
 		_, err = findSteamProcess()
 		if err == nil {
-			fmt.Println("Steam running, shutting it down...")
+			if app.options.Verbose {
+				fmt.Println("Steam running, shutting it down...")
+			}
 			app.open("steam://Exit")
 			for {
 				var process *process.Process
 				if process, err = findSteamProcess(); err != nil {
 					break
 				}
-				fmt.Println("Waiting for Steam to shut down...", process.Pid)
+				if app.options.Verbose {
+					fmt.Println("Waiting for Steam to shut down...", process.Pid)
+				}
 				time.Sleep(1 * time.Second)
 			}
 		}
 
-		fmt.Println("Starting Steam with -login option...")
+		if app.options.Verbose {
+			fmt.Println("Starting Steam with -login option...")
+		}
 
 		cmd := exec.Command(exe, "-login", username, password)
 		// steam dies if it doesnt have a console to write to
@@ -157,7 +165,9 @@ func (app *App) registerBindings() {
 		}
 
 		handle := fmt.Sprintf("%x", raw_handle)
-		fmt.Println("Created new HTTP client with handle", handle)
+		if app.options.Verbose {
+			fmt.Println("Created new HTTP client with handle", handle)
+		}
 		clientHandles[handle] = http.Client{Jar: jar, Transport: &http.Transport{Proxy: proxy}}
 		return handle, nil
 	})
@@ -197,7 +207,9 @@ func (app *App) registerBindings() {
 			responseHeaders[key] = value[0]
 		}
 
-		fmt.Println("HTTP request", method, url, "returned", resp.StatusCode)
+		if app.options.Verbose {
+			fmt.Println("HTTP request", method, url, "returned", resp.StatusCode)
+		}
 
 		var stringifiedBody string
 		if utf8.Valid(responseBody) {
@@ -233,7 +245,9 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("httpDestroy", func(handle string) {
-		fmt.Println("Destroying HTTP client with handle", handle)
+		if app.options.Verbose {
+			fmt.Println("Destroying HTTP client with handle", handle)
+		}
 		delete(clientHandles, handle)
 	})
 
@@ -321,7 +335,9 @@ func (app *App) registerBindings() {
 			return "", err
 		}
 		handle := fmt.Sprintf("%x", raw_handle)
-		fmt.Println("Created new playwright instance with handle", handle)
+		if app.options.Verbose {
+			fmt.Println("Created new playwright instance with handle", handle)
+		}
 
 		chint := make(chan string, 1) // only need to send quit once
 		chout := make(chan string, 5) // allow up to 5 captchas to be buffered at once
@@ -368,7 +384,9 @@ func (app *App) registerBindings() {
 		if !ok {
 			return
 		}
-		fmt.Println("Destroying playwright instance with handle", handle)
+		if app.options.Verbose {
+			fmt.Println("Destroying playwright instance with handle", handle)
+		}
 		chint <- "quit"
 		delete(playwrightInHandles, handle)
 	})
