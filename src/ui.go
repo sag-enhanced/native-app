@@ -9,7 +9,7 @@ import (
 func (app *App) runUI() {
 	defer app.webview.Destroy()
 
-	app.webview.SetTitle("SAG Enhanced")
+	app.webview.SetTitle(fmt.Sprintf("SAG Enhanced (b%d)", build))
 	app.webview.SetSize(800, 600, webview.HintNone)
 
 	origin := "https://app.sage.party"
