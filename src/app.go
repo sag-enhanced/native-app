@@ -22,8 +22,6 @@ type Options struct {
 }
 
 func NewApp(options Options) *App {
-	installPlaywright()
-
 	webview := webview.New(true)
 
 	os.MkdirAll(getStoragePath(), 0755)

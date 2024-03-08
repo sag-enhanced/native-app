@@ -16,17 +16,6 @@ const (
 	HEIGHT = 620
 )
 
-func installPlaywright() error {
-	fmt.Println("Note the following browser related messages are from playwright. This may take a while if it's the first time.")
-	// technically we also support firefox, but as its not the default, it will likely not be used
-	// as much and thus we dont install it by default
-	// this is no issue, as playwright will install it on demand anyway
-	return playwright.Install(&playwright.RunOptions{
-		Browsers: []string{"chromium"},
-		Verbose:  true,
-	})
-}
-
 func runPlaywright(chint chan string, chout chan string, url string, code string, browserName string, proxy *url.URL, options Options) error {
 	args := []string{}
 	if browserName == "chromium" {
@@ -53,7 +42,9 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		fmt.Println("Running playwright with args", args)
 	}
 
-	pw, err := playwright.Run()
+	pw, err := playwright.Run(&playwright.RunOptions{
+		Browsers: []string{browserName},
+	})
 	if err != nil {
 		return err
 	}
