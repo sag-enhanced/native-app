@@ -12,10 +12,7 @@ func (app *App) runUI() {
 	app.webview.SetTitle(fmt.Sprintf("SAG Enhanced (b%d)", build))
 	app.webview.SetSize(800, 600, webview.HintNone)
 
-	origin := "https://app.sage.party"
-	if app.options.Local {
-		origin = "http://localhost:5173"
-	}
+	origin := app.options.getRealmOrigin()
 
 	// security measure to prevent any funny business
 	js := fmt.Sprintf("if(location.origin !== %q)location.href=%q", origin, origin)

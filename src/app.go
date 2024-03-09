@@ -15,12 +15,6 @@ type App struct {
 	options  Options
 }
 
-type Options struct {
-	Verbose     bool
-	Local       bool
-	OpenCommand []string
-}
-
 func NewApp(options Options) *App {
 	webview := webview.New(true)
 

@@ -15,7 +15,7 @@ func main() {
 	var options app.Options
 	var openCommand string
 	flag.StringVar(&remoteSession, "remote", "", "Allow remote debugging with the specified session ID.")
-	flag.BoolVar(&options.Local, "local", false, "Run the app in local mode")
+	flag.StringVar(&options.Realm, "realm", "stable", "Run the app in the specified realm")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
 	flag.Parse()
