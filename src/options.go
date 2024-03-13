@@ -9,9 +9,10 @@ const (
 )
 
 type Options struct {
-	Verbose     bool
-	Realm       Realm
-	OpenCommand []string
+	Verbose         bool
+	Realm           Realm
+	OpenCommand     []string
+	RemotejsSession string
 }
 
 func (options *Options) getRealmOrigin() string {

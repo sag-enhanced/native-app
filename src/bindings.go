@@ -414,10 +414,6 @@ func (app *App) registerBindings() {
 			"id":    id,
 		}, nil
 	})
-
-	app.bind("quit", func() {
-		app.webview.Dispatch(app.webview.Terminate)
-	})
 }
 
 type HTTPResponse struct {

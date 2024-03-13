@@ -11,10 +11,9 @@ import (
 )
 
 func main() {
-	var remoteSession string
 	var options app.Options
 	var openCommand string
-	flag.StringVar(&remoteSession, "remote", "", "Allow remote debugging with the specified session ID.")
+	flag.StringVar(&options.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
 	flag.StringVar(&options.Realm, "realm", "stable", "Run the app in the specified realm")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
@@ -26,10 +25,10 @@ func main() {
 		options.OpenCommand = app.GetDefaultOpenCommand()
 	}
 
-	if remoteSession != "" {
+	if options.RemotejsSession != "" {
 		var allow string
-		fmt.Println("Debug session requested: " + remoteSession)
-		fmt.Println("A debug session will allow others to connect to your app and debug it remotely.")
+		fmt.Println("Debug session requested using -remote flag")
+		fmt.Println("A debug session will allow others to connect to your app and debug it remotely. Please make sure you are communicating with official staff.")
 		fmt.Print("Allow debug session? (y/N): ")
 		fmt.Scanln(&allow)
 		if allow != "y" && allow != "Y" {
@@ -39,11 +38,8 @@ func main() {
 	}
 
 	app := app.NewApp(options)
-	if remoteSession != "" {
-		app.InstallDebugger(remoteSession)
-	}
-
 	start := time.Now()
+
 	app.Run()
 
 	elapsed := time.Since(start)
