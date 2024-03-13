@@ -16,9 +16,11 @@ func (app *App) runPlaywrightUI() {
 		},
 	}
 
-	pw, err := playwright.Run(&playwright.RunOptions{
+	playwright.Install(&playwright.RunOptions{
 		Browsers: []string{"chromium"},
 	})
+
+	pw, err := playwright.Run()
 
 	if err != nil {
 		fmt.Println("Error while starting playwright: ", err)

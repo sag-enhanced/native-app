@@ -42,9 +42,11 @@ func runPlaywright(chint chan string, chout chan string, url string, code string
 		fmt.Println("Running playwright with args", args)
 	}
 
-	pw, err := playwright.Run(&playwright.RunOptions{
+	playwright.Install(&playwright.RunOptions{
 		Browsers: []string{browserName},
 	})
+
+	pw, err := playwright.Run()
 	if err != nil {
 		return err
 	}
