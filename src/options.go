@@ -1,5 +1,7 @@
 package app
 
+import "runtime"
+
 type Realm = string
 
 const (
@@ -8,12 +10,19 @@ const (
 	LocalRealm  Realm = "local"
 )
 
+type UI = string
+
+const (
+	PlaywrightUI UI = "playwright"
+	WebviewUI    UI = "webview"
+)
+
 type Options struct {
 	Verbose         bool
 	Realm           Realm
 	OpenCommand     []string
 	RemotejsSession string
-	PlaywrightUI    bool
+	UI              UI
 }
 
 func (options *Options) getRealmOrigin() string {
@@ -25,4 +34,11 @@ func (options *Options) getRealmOrigin() string {
 	default:
 		return "https://app.sage.party"
 	}
+}
+
+func GetPreferredUI() UI {
+	if runtime.GOOS == "linux" {
+		return PlaywrightUI
+	}
+	return WebviewUI
 }

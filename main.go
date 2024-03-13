@@ -17,13 +17,16 @@ func main() {
 	flag.StringVar(&options.Realm, "realm", "stable", "Run the app in the specified realm")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
-	flag.BoolVar(&options.PlaywrightUI, "pw", false, "Use Playwright UI (EXPERIMENTAL)")
+	flag.StringVar(&options.UI, "ui", "", "UI to use (webview or playwright)")
 	flag.Parse()
 
 	if openCommand != "" {
 		options.OpenCommand = strings.Split(openCommand, " ")
 	} else {
 		options.OpenCommand = app.GetDefaultOpenCommand()
+	}
+	if options.UI == "" {
+		options.UI = app.GetPreferredUI()
 	}
 
 	if options.RemotejsSession != "" {
