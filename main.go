@@ -17,6 +17,7 @@ func main() {
 	flag.StringVar(&options.Realm, "realm", "stable", "Run the app in the specified realm")
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
+	flag.BoolVar(&options.PlaywrightUI, "pw", false, "Use Playwright UI (EXPERIMENTAL)")
 	flag.Parse()
 
 	if openCommand != "" {

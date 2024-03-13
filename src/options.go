@@ -13,6 +13,7 @@ type Options struct {
 	Realm           Realm
 	OpenCommand     []string
 	RemotejsSession string
+	PlaywrightUI    bool
 }
 
 func (options *Options) getRealmOrigin() string {

@@ -27,5 +27,10 @@ func NewApp(options Options) *App {
 
 func (app *App) Run() {
 	app.registerBindings()
-	app.runWebview()
+
+	if app.options.PlaywrightUI {
+		app.runPlaywrightUI()
+	} else {
+		app.runWebview()
+	}
 }
