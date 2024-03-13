@@ -2,15 +2,14 @@ package app
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/playwright-community/playwright-go"
 )
 
 func (app *App) runPlaywrightUI() {
-	args := []string{}
 	options := playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(false),
-		Args:     args,
 		IgnoreDefaultArgs: []string{
 			// disables "Chrome is being controlled by automated test software" banner
 			"--enable-automation",
@@ -73,7 +72,15 @@ func (app *App) initPlaywrightBindings(page playwright.Page, mainThread chan fun
 		if len(args) != 3 {
 			return fmt.Errorf("sage() expects 3 arguments")
 		}
-		// TODO: add an origin check to source
+		caller, err := url.Parse(source.Frame.URL())
+		if err != nil {
+			return fmt.Errorf("failed to parse caller URL: %w", err)
+		}
+
+		callerOrigin := fmt.Sprintf("%s://%s", caller.Scheme, caller.Host)
+		if callerOrigin != app.options.getRealmOrigin() {
+			return fmt.Errorf("sage() is not allowed to be called from %q", callerOrigin)
+		}
 
 		method := args[0].(string)
 		callId := args[1].(int)
