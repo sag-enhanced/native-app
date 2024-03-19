@@ -11,7 +11,7 @@ import (
 // because the webview one is blocking and we want to be able to call
 // functions that take a while to complete (eg make a network request)
 
-func (app *App) bindHandler(method string, callId int, params string, eval func(code string)) error {
+func (app *App) bindHandler(method string, callId int, params string) error {
 	handler, ok := app.bindings[method]
 	if app.options.Verbose {
 		fmt.Println("RPC call:", method, callId, params)
@@ -23,16 +23,16 @@ func (app *App) bindHandler(method string, callId int, params string, eval func(
 	go func() {
 		result, err := handler(params)
 		if err != nil {
-			eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", callId, err.Error(), callId))
+			app.ui.eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", callId, err.Error(), callId))
 			return
 		}
 		encoded, err := json.Marshal(result)
 		if err != nil {
 			fmt.Println("Failed to marshal result of RPC function", method, err)
-			eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", callId, callId))
+			app.ui.eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", callId, callId))
 			return
 		}
-		eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", callId, string(encoded), callId))
+		app.ui.eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", callId, string(encoded), callId))
 	}()
 	return nil
 }

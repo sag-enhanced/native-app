@@ -6,41 +6,55 @@ import (
 	webview_go "github.com/webview/webview_go"
 )
 
-func (app *App) runWebview() {
-	webview := webview_go.New(true)
-	defer webview.Destroy()
+type WebviewUII struct {
+	app     *App
+	webview webview_go.WebView
+}
 
-	app.initWebviewBindings(webview)
+func createWebviewUII(app *App) *WebviewUII {
+	return &WebviewUII{
+		app: app,
+	}
+}
 
-	webview.SetTitle(fmt.Sprintf("SAG Enhanced (b%d)", build))
-	webview.SetSize(800, 600, webview_go.HintNone)
+func (wui *WebviewUII) run() {
+	wui.webview = webview_go.New(true)
+	defer wui.webview.Destroy()
 
-	origin := app.options.getRealmOrigin()
+	wui.webview.SetTitle(fmt.Sprintf("SAG Enhanced (b%d)", build))
+	wui.webview.SetSize(800, 600, webview_go.HintNone)
+
+	origin := wui.app.options.getRealmOrigin()
 	// security measure to prevent any funny business
 	js := fmt.Sprintf("if(location.origin !== %q)location.href=%q", origin, origin)
-	webview.Init(js)
+	wui.webview.Init(js)
 
-	if app.options.RemotejsSession != "" {
-		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", app.options.RemotejsSession)
-		webview.Init(js)
+	wui.webview.Bind("sage", wui.app.bindHandler)
+
+	if wui.app.options.RemotejsSession != "" {
+		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", wui.app.options.RemotejsSession)
+		wui.webview.Init(js)
 	}
 
-	webview.Navigate(origin)
-	webview.Run()
+	wui.webview.Navigate(origin)
+	wui.webview.Run()
 }
 
-func (app *App) initWebviewBindings(webview webview_go.WebView) {
-	eval := func(code string) {
-		webview.Dispatch(func() {
-			webview.Eval(code)
-		})
-	}
-	webview.Bind("sage", func(method string, callId int, params string) error {
-		return app.bindHandler(method, callId, params, eval)
-	})
-
-	// special bindings
-	app.bind("quit", func() {
-		webview.Dispatch(webview.Terminate)
+func (wui *WebviewUII) eval(code string) {
+	wui.webview.Dispatch(func() {
+		wui.webview.Eval(code)
 	})
 }
+
+func (wui *WebviewUII) quit() {
+	wui.webview.Dispatch(func() {
+		wui.webview.Terminate()
+	})
+}
+
+//
+// func (app *App) initWebviewBindings(webview webview_go.WebView) {
+// 	webview.Bind("sage", func(method string, callId int, params string) error {
+// 		return app.bindHandler(method, callId, params)
+// 	})
+// }

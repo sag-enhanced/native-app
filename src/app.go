@@ -10,6 +10,8 @@ type App struct {
 	start    int64
 	bindings map[string]func(req string) (interface{}, error)
 	options  Options
+
+	ui UII
 }
 
 func NewApp(options Options) *App {
@@ -22,15 +24,18 @@ func NewApp(options Options) *App {
 
 	start := time.Now().UnixMilli()
 
-	return &App{identity: identity, start: start, bindings: map[string]func(req string) (interface{}, error){}, options: options}
+	app := &App{identity: identity, start: start, bindings: map[string]func(req string) (interface{}, error){}, options: options}
+
+	if options.UI == PlaywrightUI {
+		app.ui = createPlaywrightUII(app)
+	} else {
+		app.ui = createWebviewUII(app)
+	}
+
+	return app
 }
 
 func (app *App) Run() {
 	app.registerBindings()
-
-	if app.options.UI == PlaywrightUI {
-		app.runPlaywrightUI()
-	} else {
-		app.runWebview()
-	}
+	app.ui.run()
 }
