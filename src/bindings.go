@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"compress/flate"
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -16,6 +17,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -401,6 +403,50 @@ func (app *App) registerBindings() {
 		return os.RemoveAll(dir)
 	})
 
+	var server *http.Server
+	app.bind("serverNew", func() {
+		if server != nil {
+			return
+		}
+
+		server = &http.Server{
+			Addr: "127.0.0.1:" + strconv.Itoa(loopbackPort),
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				w.WriteHeader(204)
+				r.URL.Host = r.Host
+				r.URL.Scheme = "http"
+				request := map[string]any{
+					"method":  r.Method,
+					"url":     r.URL.String(),
+					"headers": map[string]string{},
+					"body":    body,
+				}
+				for key, value := range r.Header {
+					request["headers"].(map[string]string)[key] = value[0]
+				}
+				encoded, err := json.Marshal(request)
+				if err != nil {
+					return
+				}
+				app.ui.eval("sages(" + string(encoded) + ")")
+			}),
+		}
+
+		go server.ListenAndServe()
+	})
+
+	app.bind("serverDestroy", func() {
+		if server != nil {
+			server.Shutdown(context.Background())
+			server = nil
+		}
+	})
+
 	app.bind("info", func() (map[string]any, error) {
 		id, err := machineid.ID()
 		if err != nil {
@@ -412,6 +458,7 @@ func (app *App) registerBindings() {
 			"os":    runtime.GOOS,
 			"arch":  runtime.GOARCH,
 			"id":    id,
+			"port":  loopbackPort,
 		}, nil
 	})
 
