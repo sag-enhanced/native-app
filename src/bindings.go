@@ -14,7 +14,6 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"runtime"
 	"strconv"
