@@ -89,14 +89,14 @@ func (app *App) registerBindings() {
 			fmt.Println("Steam data directory found at", data)
 		}
 
-		entryFile := path.Join(data, "steamui", "sp.js")
+		entryFile := path.Join(data, "steamui", "library.js")
 		content, err := os.ReadFile(entryFile)
 		if err != nil {
 			return err
 		}
 
 		// inject our code into the steam client
-		lines := strings.Split(string(content), "\n")[:2]
+		lines := strings.Split(string(content), "\n")[:3]
 		if js != "" {
 			lines = append(lines, js)
 		}
