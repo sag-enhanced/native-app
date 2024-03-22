@@ -23,7 +23,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/shirou/gopsutil/v3/process"
 	"github.com/sqweek/dialog"
 )
 
@@ -75,24 +74,7 @@ func (app *App) registerBindings() {
 		if app.options.Verbose {
 			fmt.Println("Steam executable found at", exe)
 		}
-
-		_, err = findSteamProcess()
-		if err == nil {
-			if app.options.Verbose {
-				fmt.Println("Steam running, shutting it down...")
-			}
-			app.open("steam://Exit")
-			for {
-				var process *process.Process
-				if process, err = findSteamProcess(); err != nil {
-					break
-				}
-				if app.options.Verbose {
-					fmt.Println("Waiting for Steam to shut down...", process.Pid)
-				}
-				time.Sleep(1 * time.Second)
-			}
-		}
+		app.closeSteam()
 
 		if app.options.Verbose {
 			fmt.Println("Starting Steam with -login option...")
@@ -101,7 +83,60 @@ func (app *App) registerBindings() {
 		cmd := exec.Command(exe, "-login", username, password)
 		// steam dies if it doesnt have a console to write to
 		cmd.Stdout = os.Stdout
-		return cmd.Run()
+		cmd.Run()
+		return nil
+	})
+
+	app.bind("steamPatch", func(js string) error {
+		exe, err := app.findSteamExecutable()
+		if err != nil {
+			return err
+		}
+
+		if app.options.Verbose {
+			fmt.Println("Steam executable found at", exe)
+		}
+
+		data, err := app.findSteamDataDir()
+		if err != nil {
+			return err
+		}
+		if app.options.Verbose {
+			fmt.Println("Steam data directory found at", data)
+		}
+
+		entryFile := path.Join(data, "steamui", "sp.js")
+		content, err := os.ReadFile(entryFile)
+		if err != nil {
+			return err
+		}
+
+		// inject our code into the steam client
+		lines := strings.Split(string(content), "\n")[:2]
+		if js != "" {
+			lines = append(lines, js)
+		}
+
+		return os.WriteFile(entryFile, []byte(strings.Join(lines, "\n")), 0644)
+	})
+
+	app.bind("steamRun", func() error {
+		exe, err := app.findSteamExecutable()
+		if err != nil {
+			return err
+		}
+		app.closeSteam()
+
+		if app.options.Verbose {
+			fmt.Println("Starting Steam with injected code...")
+		}
+		// -noverifyfiles is required to prevent steam from checking the files
+		// and redownloading them if they are modified
+		cmd := exec.Command(exe, "-noverifyfiles")
+		// steam dies if it doesnt have a console to write to
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+		return nil
 	})
 
 	app.bind("id", func() string {

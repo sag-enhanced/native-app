@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
+	"runtime"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
@@ -49,6 +51,19 @@ func (app App) findSteamExecutable() (string, error) {
 	return exe, nil
 }
 
+func (app *App) findSteamDataDir() (string, error) {
+	if runtime.GOOS == "darwin" {
+		// the application in /Applications is just the bootstrapper, the real executable
+		// is installed per user right here:
+		return path.Join(os.Getenv("HOME"), "Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS"), nil
+	}
+	executable, err := app.findSteamExecutable()
+	if err != nil {
+		return "", err
+	}
+	return path.Dir(executable), nil
+}
+
 func findSteamProcess() (*process.Process, error) {
 	processList, err := process.Processes()
 	if err != nil {
@@ -64,4 +79,34 @@ func findSteamProcess() (*process.Process, error) {
 		}
 	}
 	return nil, errors.New("Steam process not found")
+}
+
+func (app *App) closeSteam() error {
+	proc, err := findSteamProcess()
+	if err != nil {
+		return nil
+	}
+	if app.options.Verbose {
+		fmt.Println("Steam running, shutting it down...")
+	}
+	exe, err := proc.Exe()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(exe, "-shutdown")
+	// steam dies if it doesnt have a console to write to
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+
+	for {
+		var process *process.Process
+		if process, err = findSteamProcess(); err != nil {
+			break
+		}
+		if app.options.Verbose {
+			fmt.Println("Waiting for Steam to shut down...", process.Pid)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	return nil
 }
