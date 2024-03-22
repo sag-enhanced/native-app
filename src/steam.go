@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -16,7 +16,7 @@ import (
 // seemed like the most reliable way to find it on all platforms
 func (app App) findSteamExecutable() (string, error) {
 	storagePath := getStoragePath()
-	cache := path.Join(storagePath, "steam_executable.txt")
+	cache := filepath.Join(storagePath, "steam_executable.txt")
 	if _, err := os.Stat(cache); err == nil {
 		data, err := os.ReadFile(cache)
 		if err != nil {
@@ -55,13 +55,13 @@ func (app *App) findSteamDataDir() (string, error) {
 	if runtime.GOOS == "darwin" {
 		// the application in /Applications is just the bootstrapper, the real executable
 		// is installed per user right here:
-		return path.Join(os.Getenv("HOME"), "Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS"), nil
+		return filepath.Join(os.Getenv("HOME"), "Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS"), nil
 	}
 	executable, err := app.findSteamExecutable()
 	if err != nil {
 		return "", err
 	}
-	return path.Dir(executable), nil
+	return filepath.Dir(executable), nil
 }
 
 func findSteamProcess() (*process.Process, error) {
