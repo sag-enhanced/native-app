@@ -86,22 +86,29 @@ func (app *App) closeSteam() error {
 	if err != nil {
 		return nil
 	}
-	if app.options.Verbose {
-		fmt.Println("Steam running, shutting it down...")
-	}
 	exe, err := proc.Exe()
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(exe, "-shutdown")
-	// steam dies if it doesnt have a console to write to
-	cmd.Stdout = os.Stdout
-	cmd.Run()
 
+	killed := int32(0)
 	for {
 		var process *process.Process
 		if process, err = findSteamProcess(); err != nil {
 			break
+		}
+		if process.Pid != killed {
+			// new process found
+			if app.options.Verbose {
+				fmt.Println("Steam running, shutting it down...")
+			}
+
+			cmd := exec.Command(exe, "-shutdown")
+			// steam dies if it doesnt have a console to write to
+			cmd.Stdout = os.Stdout
+			cmd.Run()
+
+			killed = process.Pid
 		}
 		if app.options.Verbose {
 			fmt.Println("Waiting for Steam to shut down...", process.Pid)
