@@ -81,33 +81,37 @@ func findSteamProcess() (*process.Process, error) {
 	return nil, errors.New("Steam process not found")
 }
 
-func (app *App) closeSteam() error {
-	proc, err := findSteamProcess()
-	if err != nil {
-		return nil
-	}
-	exe, err := proc.Exe()
+func (app *App) runSteamWithArguments(args ...string) error {
+	executable, err := app.findSteamExecutable()
 	if err != nil {
 		return err
 	}
+	if app.options.Verbose {
+		fmt.Println("Running Steam with arguments:", executable, args)
+	}
+	cmd := exec.Command(executable, args...)
+	// steam is dying without having stdout attached
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+	return nil
+}
 
+func (app *App) closeSteam() error {
 	killed := int32(0)
 	for {
 		var process *process.Process
+		var err error
 		if process, err = findSteamProcess(); err != nil {
 			break
 		}
 		if process.Pid != killed {
-			// new process found
+			// new process found (this can happen if we close steam while its still bootstrapping)
 			if app.options.Verbose {
 				fmt.Println("Steam running, shutting it down...")
 			}
 
-			cmd := exec.Command(exe, "-shutdown")
-			// steam dies if it doesnt have a console to write to
-			cmd.Stdout = os.Stdout
-			cmd.Run()
-
+			app.runSteamWithArguments("-shutdown")
 			killed = process.Pid
 		}
 		if app.options.Verbose {

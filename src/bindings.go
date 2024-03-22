@@ -64,27 +64,11 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("steamDesktopLogin", func(username string, password string) error {
-		// to login in the desktop client, we start it with the -login launch option
-		// however, we first need to kill any existing steam processes
-		exe, err := app.findSteamExecutable()
+		err := app.closeSteam()
 		if err != nil {
 			return err
 		}
-
-		if app.options.Verbose {
-			fmt.Println("Steam executable found at", exe)
-		}
-		app.closeSteam()
-
-		if app.options.Verbose {
-			fmt.Println("Starting Steam with -login option...")
-		}
-
-		cmd := exec.Command(exe, "-login", username, password)
-		// steam dies if it doesnt have a console to write to
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-		return nil
+		return app.runSteamWithArguments("-login", username, password)
 	})
 
 	app.bind("steamPatch", func(js string) error {
@@ -121,10 +105,6 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("steamRun", func() error {
-		exe, err := app.findSteamExecutable()
-		if err != nil {
-			return err
-		}
 		app.closeSteam()
 
 		if app.options.Verbose {
@@ -132,11 +112,7 @@ func (app *App) registerBindings() {
 		}
 		// -noverifyfiles is required to prevent steam from checking the files
 		// and redownloading them if they are modified
-		cmd := exec.Command(exe, "-noverifyfiles")
-		// steam dies if it doesnt have a console to write to
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-		return nil
+		return app.runSteamWithArguments("-noverifyfiles")
 	})
 
 	app.bind("id", func() string {
