@@ -44,9 +44,14 @@ func (wui *WebviewUII) eval(code string) {
 	if wui.app.options.Verbose {
 		fmt.Println("Eval:", code)
 	}
-	wui.webview.Dispatch(func() {
-		wui.webview.Eval(code)
-	})
+	// there seems to be a rare bug in webview where sometimes the eval doesn't work
+	// so we try it a few times (the code is idempotent so it's safe to retry)
+	// 3 tries should be enough
+	for i := 0; i < 3; i++ {
+		wui.webview.Dispatch(func() {
+			wui.webview.Eval(code)
+		})
+	}
 }
 
 func (wui *WebviewUII) quit() {
@@ -54,10 +59,3 @@ func (wui *WebviewUII) quit() {
 		wui.webview.Terminate()
 	})
 }
-
-//
-// func (app *App) initWebviewBindings(webview webview_go.WebView) {
-// 	webview.Bind("sage", func(method string, callId int, params string) error {
-// 		return app.bindHandler(method, callId, params)
-// 	})
-// }

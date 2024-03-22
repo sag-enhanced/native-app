@@ -443,7 +443,8 @@ func (app *App) registerBindings() {
 				if err != nil {
 					return
 				}
-				app.ui.eval("sages(" + string(encoded) + ")")
+				sequence := time.Now().UnixNano()
+				app.ui.eval(fmt.Sprintf("sages(%s, %d)", encoded, sequence))
 			}),
 		}
 

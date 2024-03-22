@@ -16,6 +16,8 @@ func (app *App) bindHandler(method string, callId int, params string) error {
 	if app.options.Verbose {
 		fmt.Println("RPC call:", method, callId, params)
 	}
+	prefix := fmt.Sprintf("if(saged[%d]){", callId)
+	suffix := fmt.Sprintf(";delete saged[%d]}", callId)
 
 	if !ok {
 		return errors.New("invalid method: " + method)
@@ -23,16 +25,16 @@ func (app *App) bindHandler(method string, callId int, params string) error {
 	go func() {
 		result, err := handler(params)
 		if err != nil {
-			app.ui.eval(fmt.Sprintf("saged[%d].b(new Error(%q));delete saged[%d]", callId, err.Error(), callId))
+			app.ui.eval(prefix + fmt.Sprintf("saged[%d].b(new Error(%q))", callId, err.Error()) + suffix)
 			return
 		}
 		encoded, err := json.Marshal(result)
 		if err != nil {
 			fmt.Println("Failed to marshal result of RPC function", method, err)
-			app.ui.eval(fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));delete saged[%d]", callId, callId))
+			app.ui.eval(prefix + fmt.Sprintf("saged[%d].b(new Error('result marshal failed'));", callId) + suffix)
 			return
 		}
-		app.ui.eval(fmt.Sprintf("saged[%d].a(%s);delete saged[%d]", callId, string(encoded), callId))
+		app.ui.eval(prefix + fmt.Sprintf("saged[%d].a(%s)", callId, string(encoded)) + suffix)
 	}()
 	return nil
 }
