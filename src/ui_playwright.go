@@ -85,6 +85,9 @@ func (pwui *PlaywrightUII) run() {
 }
 
 func (pwui *PlaywrightUII) eval(code string) {
+	if pwui.app.options.Verbose {
+		fmt.Println("Eval:", code)
+	}
 	pwui.mainThread <- func() {
 		pwui.page.Evaluate(code)
 	}

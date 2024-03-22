@@ -41,6 +41,9 @@ func (wui *WebviewUII) run() {
 }
 
 func (wui *WebviewUII) eval(code string) {
+	if wui.app.options.Verbose {
+		fmt.Println("Eval:", code)
+	}
 	wui.webview.Dispatch(func() {
 		wui.webview.Eval(code)
 	})
