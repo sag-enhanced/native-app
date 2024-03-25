@@ -58,6 +58,19 @@ func (app *App) registerBindings() {
 		return os.WriteFile(path, []byte(data), 0644)
 	})
 
+	app.bind("read", func(filterText string, filter string) (string, error) {
+		path, err := dialog.File().Title("Open file").Filter(filterText, filter).Load()
+		if err != nil {
+			return "", err
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	})
+
 	app.bind("alert", func(message string) {
 		dialog.Message(message).Title("Alert").Info()
 	})
