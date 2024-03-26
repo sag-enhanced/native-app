@@ -47,11 +47,11 @@ func (wui *WebviewUII) eval(code string) {
 	// there seems to be a rare bug in webview where sometimes the eval doesn't work
 	// so we try it a few times (the code is idempotent so it's safe to retry)
 	// 3 tries should be enough
-	for i := 0; i < 3; i++ {
-		wui.webview.Dispatch(func() {
-			wui.webview.Eval(code)
-		})
-	}
+	// for i := 0; i < 3; i++ {
+	wui.webview.Dispatch(func() {
+		wui.webview.Eval(code)
+	})
+	// }
 }
 
 func (wui *WebviewUII) quit() {
