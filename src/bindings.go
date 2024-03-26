@@ -22,6 +22,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/denisbrodbeck/machineid"
+	"github.com/gen2brain/beeep"
 	"github.com/sqweek/dialog"
 )
 
@@ -73,6 +74,17 @@ func (app *App) registerBindings() {
 
 	app.bind("alert", func(message string) {
 		dialog.Message(message).Title("Alert").Info()
+	})
+
+	app.bind("notify", func(title string, message string, alert bool) error {
+		err := beeep.Notify(title, message, "")
+		if err != nil {
+			return err
+		}
+		if alert {
+			return beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
+		}
+		return nil
 	})
 
 	app.bind("steamDesktopLogin", func(username string, password string) error {
