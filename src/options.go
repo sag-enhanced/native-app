@@ -31,9 +31,10 @@ func (options *Options) getRealmOrigin() string {
 		return "https://app-beta.sage.party"
 	case LocalRealm:
 		return "http://localhost:5173"
-	default:
+	case StableRealm:
 		return "https://app.sage.party"
 	}
+	return "https://" + options.Realm
 }
 
 func GetPreferredUI() UI {
