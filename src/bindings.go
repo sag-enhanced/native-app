@@ -363,41 +363,33 @@ func (app *App) registerBindings() {
 	})
 
 	// browser automation
-
-	playwrightInHandles := map[string]chan string{}
-	playwrightOutHandles := map[string]chan string{}
-	app.bind("playwrightNew", func(pageUrl string, code string, browser string, proxy *string) (string, error) {
+	browserResultHandles := map[string]chan string{}
+	browserStopHandles := map[string]chan string{}
+	app.bind("browserNew", func(pageUrl string, code string, browser string, proxy *string) (string, error) {
 		rawHandle := make([]byte, 16)
 		if _, err := rand.Read(rawHandle); err != nil {
 			return "", err
 		}
 		handle := fmt.Sprintf("%x", rawHandle)
 		if app.options.Verbose {
-			fmt.Println("Created new playwright instance with handle", handle)
+			fmt.Println("Created new browser instance with handle", handle)
 		}
 
-		chint := make(chan string, 5)
-		chout := make(chan string, 5)
-		var proxyUrl *url.URL
-		if proxy != nil {
-			parsedProxyUrl, err := url.Parse(*proxy)
+		chResult := make(chan string, 5)
+		chStop := make(chan string, 5)
+		go func() {
+			err := app.runBrowser(chResult, chStop, pageUrl, code, proxy)
 			if err != nil {
-				return "", err
+				fmt.Println("Error running browser:", err)
 			}
-			proxyUrl = parsedProxyUrl
-		}
+		}()
 
-		// playwright isnt thread-safe, so we will need to make a lot of
-		// dirty hacks to keep everything in this one goroutine
-		go runPlaywright(chint, chout, pageUrl, code, browser, proxyUrl, app.options)
-
-		playwrightInHandles[handle] = chint
-		playwrightOutHandles[handle] = chout
-
+		browserResultHandles[handle] = chResult
+		browserStopHandles[handle] = chStop
 		return handle, nil
 	})
-	app.bind("playwrightGet", func(handle string, timeout int64) (string, error) {
-		chout, ok := playwrightOutHandles[handle]
+	app.bind("browserGet", func(handle string, timeout int64) (string, error) {
+		chResult, ok := browserResultHandles[handle]
 		if !ok {
 			return "", errors.New("invalid handle")
 		}
@@ -405,37 +397,31 @@ func (app *App) registerBindings() {
 		select {
 		case <-time.After(time.Duration(timeout) * time.Millisecond):
 			return "", errors.New("timeout")
-		case msg := <-chout:
+		case msg := <-chResult:
 			if msg == "closed" {
-				delete(playwrightOutHandles, handle)
-				delete(playwrightInHandles, handle)
+				delete(browserStopHandles, handle)
+				delete(browserResultHandles, handle)
 				return "", errors.New("closed")
 			}
 			return msg, nil
 		}
 	})
-	app.bind("playwrightDestroy", func(handle string) {
-		delete(playwrightOutHandles, handle)
+	app.bind("browserDestroy", func(handle string) {
+		delete(browserStopHandles, handle)
 
-		chint, ok := playwrightInHandles[handle]
+		chint, ok := browserStopHandles[handle]
 		if !ok {
 			return
 		}
 		if app.options.Verbose {
-			fmt.Println("Destroying playwright instance with handle", handle)
+			fmt.Println("Destroying browser instance with handle", handle)
 		}
 		chint <- "quit"
-		delete(playwrightInHandles, handle)
+		delete(browserResultHandles, handle)
 	})
 
-	app.bind("playwrightDestroyProfile", func(browser string) error {
-		profileName := "pw-profile"
-		if browser != "chromium" {
-			profileName += "-" + browser
-		}
-		dir := path.Join(getStoragePath(), profileName)
-
-		return os.RemoveAll(dir)
+	app.bind("browserDestroyProfile", func() error {
+		return app.destroyBrowserProfile()
 	})
 
 	var server *http.Server
