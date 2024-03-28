@@ -407,16 +407,16 @@ func (app *App) registerBindings() {
 		}
 	})
 	app.bind("browserDestroy", func(handle string) {
-		delete(browserStopHandles, handle)
+		delete(browserResultHandles, handle)
 
-		chint, ok := browserStopHandles[handle]
+		chStop, ok := browserStopHandles[handle]
 		if !ok {
 			return
 		}
 		if app.options.Verbose {
 			fmt.Println("Destroying browser instance with handle", handle)
 		}
-		chint <- "quit"
+		chStop <- "quit"
 		delete(browserResultHandles, handle)
 	})
 
