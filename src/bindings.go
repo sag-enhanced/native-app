@@ -367,6 +367,7 @@ func (app *App) registerBindings() {
 	browserStopHandles := map[string]chan string{}
 	app.bind("browserNew", func(pageUrl string, code string, browser string, proxy *string) (string, error) {
 		rawHandle := make([]byte, 16)
+		var err error
 		if _, err := rand.Read(rawHandle); err != nil {
 			return "", err
 		}
@@ -374,9 +375,12 @@ func (app *App) registerBindings() {
 		if app.options.Verbose {
 			fmt.Println("Created new browser instance with handle", handle)
 		}
-		parsedProxy, err := url.Parse(*proxy)
-		if err != nil && proxy != nil {
-			return "", err
+		var parsedProxy *url.URL
+		if proxy != nil {
+			parsedProxy, err = url.Parse(*proxy)
+			if err != nil {
+				return "", err
+			}
 		}
 
 		chResult := make(chan string, 5)
