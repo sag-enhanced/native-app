@@ -420,8 +420,8 @@ func (app *App) registerBindings() {
 		delete(browserResultHandles, handle)
 	})
 
-	app.bind("browserDestroyProfile", func() error {
-		return app.destroyBrowserProfile()
+	app.bind("browserDestroyProfile", func(browser string) error {
+		return app.destroyBrowserProfile(browser)
 	})
 
 	var server *http.Server

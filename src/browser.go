@@ -159,8 +159,8 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	return nil
 }
 
-func (app *App) destroyBrowserProfile() error {
-	profileName := "manual-profile"
+func (app *App) destroyBrowserProfile(browser string) error {
+	profileName := fmt.Sprintf("manual-%s-profile", browser)
 	profilePath := path.Join(getStoragePath(), profileName)
 
 	return os.RemoveAll(profilePath)
