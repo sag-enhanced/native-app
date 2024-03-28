@@ -374,11 +374,15 @@ func (app *App) registerBindings() {
 		if app.options.Verbose {
 			fmt.Println("Created new browser instance with handle", handle)
 		}
+		parsedProxy, err := url.Parse(*proxy)
+		if err != nil && proxy != nil {
+			return "", err
+		}
 
 		chResult := make(chan string, 5)
 		chStop := make(chan string, 5)
 		go func() {
-			err := app.runBrowser(chResult, chStop, pageUrl, code, browser, proxy)
+			err := app.runBrowser(chResult, chStop, pageUrl, code, browser, parsedProxy)
 			if err != nil {
 				fmt.Println("Error running browser:", err)
 			}

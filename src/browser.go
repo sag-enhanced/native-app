@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -13,12 +14,13 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/fetch"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/playwright-community/playwright-go"
 )
 
-func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *string) error {
+func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *url.URL) error {
 	defer func() {
 		chResult <- "closed"
 	}()
@@ -61,7 +63,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	}
 
 	if proxy != nil {
-		args = append(args, "--proxy-server="+*proxy)
+		args = append(args, fmt.Sprintf("--proxy-server=%s://%s", proxy.Scheme, proxy.Host))
 	}
 
 	if extensions, err := getExtensionList(); err == nil {
@@ -115,7 +117,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	defer cancel()
 	c := chromedp.FromContext(ctx)
 
-	if err := chromedp.Run(ctx); err != nil {
+	if err := chromedp.Run(ctx, fetch.Enable().WithHandleAuthRequests(true)); err != nil {
 		return err
 	}
 
@@ -144,6 +146,21 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 			go func() {
 				page.HandleJavaScriptDialog(true).Do(cdp.WithExecutor(ctx, c.Target))
 			}()
+		case *fetch.EventRequestPaused:
+			go func() {
+				fetch.ContinueRequest(ev.RequestID).Do(cdp.WithExecutor(ctx, c.Target))
+			}()
+		case *fetch.EventAuthRequired:
+			if ev.AuthChallenge.Source == fetch.AuthChallengeSourceProxy && proxy != nil && proxy.User != nil {
+				go func() {
+					password, _ := proxy.User.Password()
+					fetch.ContinueWithAuth(ev.RequestID, &fetch.AuthChallengeResponse{
+						Response: fetch.AuthChallengeResponseResponseProvideCredentials,
+						Username: proxy.User.Username(),
+						Password: password,
+					}).Do(cdp.WithExecutor(ctx, c.Target))
+				}()
+			}
 		}
 	})
 
