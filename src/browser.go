@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -17,26 +18,35 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
-func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, proxy *string) error {
+func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *string) error {
 	defer func() {
 		chResult <- "closed"
 	}()
 
-	// we still use playwright to install browser binaries
-	playwright.Install(&playwright.RunOptions{
-		Browsers: []string{"chromium"},
-		Verbose:  true,
-	})
+	exe := ""
+	var err error
+	if browser == "chromium" {
+		// we still use playwright to install browser binaries
+		playwright.Install(&playwright.RunOptions{
+			Browsers: []string{browser},
+			Verbose:  true,
+		})
 
-	pw, err := playwright.Run()
-	if err != nil {
-		return err
+		pw, err := playwright.Run()
+		if err != nil {
+			return err
+		}
+
+		exe = pw.Chromium.ExecutablePath()
+		pw.Stop()
+	} else {
+		exe, err = findBrowserBinary(browser)
+		if err != nil {
+			return err
+		}
 	}
 
-	exe := pw.Chromium.ExecutablePath()
-	pw.Stop()
-
-	profileName := "manual-profile"
+	profileName := fmt.Sprintf("manual-%s-profile", browser)
 	profilePath := path.Join(getStoragePath(), profileName)
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
@@ -169,4 +179,46 @@ func getExtensionList() ([]string, error) {
 		}
 	}
 	return extensions, nil
+}
+
+func findBrowserBinary(browser string) (string, error) {
+	switch runtime.GOOS {
+	case "darwin":
+		name := "Google Chrome"
+		if browser == "edge" {
+			name = "Microsoft Edge"
+		}
+		exe := path.Join("/Applications", name+".app", "Contents", "MacOS", name)
+		if _, err := os.Stat(exe); err == nil {
+			return exe, nil
+		}
+		userExe := path.Join(os.Getenv("HOME"), exe)
+		if _, err := os.Stat(userExe); err == nil {
+			return userExe, nil
+		}
+	case "windows":
+		name := "Google\\Chrome\\Application\\chrome.exe"
+		if browser == "edge" {
+			name = "Microsoft\\Edge\\Application\\msedge.exe"
+		}
+		for _, root := range []string{os.Getenv("LOCALAPPDATA"), os.Getenv("PROGRAMFILES"), os.Getenv("PROGRAMFILES(x86)")} {
+			if root == "" {
+				continue
+			}
+			exe := path.Join(root, name)
+			if _, err := os.Stat(exe); err == nil {
+				return exe, nil
+			}
+		}
+	case "linux":
+		exe := "/opt/google/chrome/chrome"
+		if browser == "edge" {
+			exe = "/opt/microsoft/msedge/msedge"
+		}
+		if _, err := os.Stat(exe); err == nil {
+			return exe, nil
+		}
+	}
+
+	return "", fmt.Errorf("Browser binary not found")
 }

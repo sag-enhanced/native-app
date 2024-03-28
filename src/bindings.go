@@ -378,7 +378,7 @@ func (app *App) registerBindings() {
 		chResult := make(chan string, 5)
 		chStop := make(chan string, 5)
 		go func() {
-			err := app.runBrowser(chResult, chStop, pageUrl, code, proxy)
+			err := app.runBrowser(chResult, chStop, pageUrl, code, browser, proxy)
 			if err != nil {
 				fmt.Println("Error running browser:", err)
 			}
