@@ -136,7 +136,11 @@ func (app *App) registerBindings() {
 		}
 		// -noverifyfiles is required to prevent steam from checking the files
 		// and redownloading them if they are modified
-		return app.runSteamWithArguments("-noverifyfiles")
+		args := []string{"-noverifyfiles"}
+		if app.options.Verbose {
+			args = append(args, "-dev")
+		}
+		return app.runSteamWithArguments(args...)
 	})
 
 	app.bind("id", func() string {
