@@ -20,7 +20,7 @@ import (
 	"github.com/playwright-community/playwright-go"
 )
 
-func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *url.URL) error {
+func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *url.URL, profileId int32) error {
 	defer func() {
 		chResult <- "closed"
 	}()
@@ -48,7 +48,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 		}
 	}
 
-	profileName := fmt.Sprintf("manual-%s-profile", browser)
+	profileName := fmt.Sprintf("manual-%s-%d-profile", browser, profileId)
 	profilePath := path.Join(getStoragePath(), profileName)
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
@@ -73,7 +73,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	}
 
 	if app.options.Verbose {
-		fmt.Println("Running chromedriver with args", args)
+		fmt.Println("Running browser with args", args)
 	}
 
 	cmd := exec.Command(exe, args...)

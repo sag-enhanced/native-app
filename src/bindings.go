@@ -369,7 +369,7 @@ func (app *App) registerBindings() {
 	// browser automation
 	browserResultHandles := map[string]chan string{}
 	browserStopHandles := map[string]chan string{}
-	app.bind("browserNew", func(pageUrl string, code string, browser string, proxy *string) (string, error) {
+	app.bind("browserNew", func(pageUrl string, code string, browser string, proxy *string, profileId int32) (string, error) {
 		rawHandle := make([]byte, 16)
 		var err error
 		if _, err := rand.Read(rawHandle); err != nil {
@@ -390,7 +390,7 @@ func (app *App) registerBindings() {
 		chResult := make(chan string, 5)
 		chStop := make(chan string, 5)
 		go func() {
-			err := app.runBrowser(chResult, chStop, pageUrl, code, browser, parsedProxy)
+			err := app.runBrowser(chResult, chStop, pageUrl, code, browser, parsedProxy, profileId)
 			if err != nil {
 				fmt.Println("Error running browser:", err)
 			}
