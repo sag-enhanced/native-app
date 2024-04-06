@@ -93,7 +93,7 @@ func (app *App) runSteamWithArguments(args ...string) error {
 	// steam is dying without having stdout attached
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	cmd.Start()
 	return nil
 }
 
