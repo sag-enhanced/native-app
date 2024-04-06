@@ -23,6 +23,7 @@ type Options struct {
 	OpenCommand     []string
 	RemotejsSession string
 	UI              UI
+	SteamDev        bool
 }
 
 func (options *Options) getRealmOrigin() string {

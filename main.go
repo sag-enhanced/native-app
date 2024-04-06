@@ -18,6 +18,7 @@ func main() {
 	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
 	flag.StringVar(&options.UI, "ui", "", "UI to use (webview or playwright)")
+	flag.BoolVar(&options.SteamDev, "steamdev", false, "Enable Steam Dev mode")
 	flag.Parse()
 
 	if openCommand != "" {

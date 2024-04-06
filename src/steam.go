@@ -86,6 +86,9 @@ func (app *App) runSteamWithArguments(args ...string) error {
 	if err != nil {
 		return err
 	}
+	if app.options.SteamDev {
+		args = append(args, "-dev")
+	}
 	if app.options.Verbose {
 		fmt.Println("Running Steam with arguments:", executable, args)
 	}
