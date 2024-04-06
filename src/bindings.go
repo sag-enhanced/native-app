@@ -72,6 +72,34 @@ func (app *App) registerBindings() {
 		return string(data), nil
 	})
 
+	app.bind("seal", func(data string) (string, error) {
+		id, err := app.getIdentity()
+		if err != nil {
+			return "", err
+		}
+		sealed, err := id.Seal([]byte(data))
+		if err != nil {
+			return "", err
+		}
+		return base64.StdEncoding.EncodeToString(sealed), nil
+	})
+
+	app.bind("unseal", func(data string) (string, error) {
+		id, err := app.getIdentity()
+		if err != nil {
+			return "", err
+		}
+		decoded, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return "", err
+		}
+		unsealed, err := id.Unseal(decoded)
+		if err != nil {
+			return "", err
+		}
+		return string(unsealed), nil
+	})
+
 	app.bind("alert", func(message string) {
 		dialog.Message(message).Title("Alert").Info()
 	})

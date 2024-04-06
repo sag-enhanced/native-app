@@ -2,6 +2,8 @@ package app
 
 import (
 	"crypto"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -24,6 +26,63 @@ func (identity *Identity) Sign(data []byte) ([]byte, error) {
 func (identity *Identity) Id() string {
 	data := x509.MarshalPKCS1PublicKey(&identity.private.PublicKey)
 	return string(pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: data}))
+}
+
+func (identity *Identity) Seal(data []byte) ([]byte, error) {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return nil, err
+	}
+	aesCipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	cipher, err := cipher.NewGCM(aesCipher)
+	if err != nil {
+		return nil, err
+	}
+	iv := make([]byte, cipher.NonceSize())
+	if _, err := rand.Read(iv); err != nil {
+		return nil, err
+	}
+
+	sealed := cipher.Seal(nil, iv, pad(data, aes.BlockSize), nil)
+	sealedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &identity.private.PublicKey, key, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]byte, len(iv)+len(sealedKey)+len(sealed))
+	copy(result, iv)
+	copy(result[len(iv):], sealedKey)
+	copy(result[len(iv)+len(sealedKey):], sealed)
+
+	return result, nil
+}
+
+func (identity *Identity) Unseal(data []byte) ([]byte, error) {
+	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.private, data[:256], nil)
+	if err != nil {
+		return nil, err
+	}
+	aesCipher, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	cipher, err := cipher.NewGCM(aesCipher)
+	if err != nil {
+		return nil, err
+	}
+
+	iv := data[256 : 256+cipher.NonceSize()]
+	sealed := data[256+cipher.NonceSize():]
+
+	plain, err := cipher.Open(nil, iv, sealed, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpad(plain), nil
 }
 
 func loadIdentity(fm *FileManager) (*Identity, error) {
