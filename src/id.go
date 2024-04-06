@@ -66,3 +66,14 @@ func loadIdentity(fm *FileManager) (*Identity, error) {
 
 	return &Identity{private: private}, nil
 }
+
+func (app *App) getIdentity() (*Identity, error) {
+	if app.identity == nil {
+		identity, err := loadIdentity(app.fm)
+		if err != nil {
+			return nil, err
+		}
+		app.identity = identity
+	}
+	return app.identity, nil
+}

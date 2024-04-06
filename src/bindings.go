@@ -140,25 +140,19 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("id", func() (string, error) {
-		if app.identity == nil {
-			id, err := loadIdentity(app.fm)
-			if err != nil {
-				return "", err
-			}
-			app.identity = id
+		id, err := app.getIdentity()
+		if err != nil {
+			return "", err
 		}
-		return app.identity.Id(), nil
+		return id.Id(), nil
 	})
 
 	app.bind("sign", func(message string) ([]byte, error) {
-		if app.identity == nil {
-			id, err := loadIdentity(app.fm)
-			if err != nil {
-				return nil, err
-			}
-			app.identity = id
+		id, err := app.getIdentity()
+		if err != nil {
+			return nil, err
 		}
-		return app.identity.Sign([]byte(message))
+		return id.Sign([]byte(message))
 	})
 
 	app.bind("get", func(key string) (string, error) {
