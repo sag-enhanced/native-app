@@ -139,17 +139,38 @@ func (app *App) registerBindings() {
 		return app.runSteamWithArguments("-noverifyfiles")
 	})
 
-	app.bind("id", func() string {
-		return app.identity.Id()
+	app.bind("id", func() (string, error) {
+		if app.identity == nil {
+			id, err := loadIdentity(app.fm)
+			if err != nil {
+				return "", err
+			}
+			app.identity = id
+		}
+		return app.identity.Id(), nil
 	})
 
 	app.bind("sign", func(message string) ([]byte, error) {
+		if app.identity == nil {
+			id, err := loadIdentity(app.fm)
+			if err != nil {
+				return nil, err
+			}
+			app.identity = id
+		}
 		return app.identity.Sign([]byte(message))
 	})
 
 	app.bind("get", func(key string) (string, error) {
-		file := path.Join(getStoragePath(), key+".dat")
-		data, err := os.ReadFile(file)
+		filenameNew := app.fm.GetFilename(key)
+		data, err := app.fm.ReadFile(filenameNew)
+		if err == nil {
+			return string(data), nil
+		}
+		fmt.Println("Failed to read new file", filenameNew, err)
+		// fallback to old file (pre b7)
+		filenameOld := path.Join(getStoragePath(), key+".dat")
+		data, err = os.ReadFile(filenameOld)
 		if err != nil {
 			return "", err
 		}
@@ -158,27 +179,63 @@ func (app *App) registerBindings() {
 		if err != nil {
 			return "", err
 		}
+		err = app.fm.WriteFile(filenameNew, decompressed, false)
+		if err == nil {
+			os.Remove(filenameOld)
+		} else {
+			fmt.Println("Failed to write decompressed data to new file", filenameNew)
+		}
 		return string(decompressed), nil
 	})
 
 	app.bind("set", func(key string, value string) error {
-		file := path.Join(getStoragePath(), key+".dat")
-		if key == "accounts" {
-			if stat, err := os.Stat(file); err == nil && int(stat.Size()) > len(value) && stat.Size() > 100 {
-				fmt.Println("New value is smaller than the old one, refusing to overwrite")
-				fmt.Println("Old size:", stat.Size(), "New size:", len(value))
-				fmt.Println("This is a bug (that could've nuked your accounts!), please report it")
-				return errors.New("new value is smaller than the old one, refusing to overwrite")
-			}
+		filename := app.fm.GetFilename(key)
+		return app.fm.WriteFile(filename, []byte(value), false)
+	})
+
+	app.bind("encryptionStatus", func() EncryptionStatus {
+		return EncryptionStatus{
+			Enabled: app.fm.manifest != nil,
+			Locked:  app.fm.cipher == nil && app.fm.manifest != nil,
 		}
-		fd, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
-		defer fd.Close()
-		writer, err := flate.NewWriter(fd, flate.BestCompression)
+	})
+
+	app.bind("encryptionUnlock", func(password string) error {
+		return app.fm.TryLoadKey(password)
+	})
+
+	app.bind("encryptionLock", func() {
+		app.fm.cipher = nil
+	})
+
+	app.bind("encryptionDisable", func() error {
+		if app.fm.manifest != nil && app.fm.cipher == nil {
+			return errors.New("need to decrypt files first")
+		}
+		os.Remove(path.Join(getStoragePath(), "manifest.json"))
+		errs := app.fm.UpdateFiles(true)
+		app.fm.cipher = nil
+		app.fm.manifest = nil
+		if len(errs) > 0 {
+			fmt.Println("Failed to update files", errs)
+			return errs[0]
+		}
+		return nil
+	})
+
+	app.bind("encryptionEnable", func(passwords []string) error {
+		if app.fm.manifest != nil && app.fm.cipher == nil {
+			return errors.New("need to decrypt files first")
+		}
+		err := app.fm.CreateKey(passwords)
 		if err != nil {
 			return err
 		}
-		defer writer.Close()
-		writer.Write([]byte(value))
+		errs := app.fm.UpdateFiles(false)
+		if len(errs) > 0 {
+			fmt.Println("Failed to update files", errs)
+			return errs[0]
+		}
 		return nil
 	})
 
@@ -505,4 +562,9 @@ type HTTPResponse struct {
 
 type Manifest struct {
 	Version string `json:"version"`
+}
+
+type EncryptionStatus struct {
+	Enabled bool `json:"enabled"`
+	Locked  bool `json:"locked"`
 }

@@ -26,9 +26,20 @@ func (identity *Identity) Id() string {
 	return string(pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: data}))
 }
 
-func loadIdentity() (*Identity, error) {
-	idFile := path.Join(getStoragePath(), "sage.id")
-	data, err := os.ReadFile(idFile)
+func loadIdentity(fm *FileManager) (*Identity, error) {
+	idFileNew := path.Join(getStoragePath(), "sage2.id")
+	data, err := fm.ReadFile(idFileNew)
+	if err != nil {
+		// migration for old id file (pre b7)
+		idFileOld := path.Join(getStoragePath(), "sage.id")
+		data, err = os.ReadFile(idFileOld)
+		if err == nil {
+			err = fm.WriteFile(idFileNew, data, false)
+			if err == nil {
+				os.Remove(idFileOld)
+			}
+		}
+	}
 	if err == nil {
 		private, err := x509.ParsePKCS8PrivateKey(data)
 		if err != nil {
@@ -48,7 +59,7 @@ func loadIdentity() (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.WriteFile(idFile, data, 0644)
+	err = fm.WriteFile(idFileNew, data, false)
 	if err != nil {
 		return nil, err
 	}

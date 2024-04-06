@@ -7,6 +7,7 @@ import (
 
 type App struct {
 	identity *Identity
+	fm       *FileManager
 	start    int64
 	bindings map[string]func(req string) (interface{}, error)
 	options  Options
@@ -17,14 +18,14 @@ type App struct {
 func NewApp(options Options) *App {
 	os.MkdirAll(getStoragePath(), 0755)
 
-	identity, err := loadIdentity()
+	fm, err := NewFileManager()
 	if err != nil {
 		panic(err)
 	}
 
 	start := time.Now().UnixMilli()
 
-	app := &App{identity: identity, start: start, bindings: map[string]func(req string) (interface{}, error){}, options: options}
+	app := &App{fm: fm, start: start, bindings: map[string]func(req string) (interface{}, error){}, options: options}
 
 	if options.UI == PlaywrightUI {
 		app.ui = createPlaywrightUII(app)
