@@ -77,7 +77,11 @@ func (app *App) registerBindings() {
 		if err != nil {
 			return "", err
 		}
-		sealed, err := id.Seal([]byte(data))
+		plaintext, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return "", err
+		}
+		sealed, err := id.Seal(plaintext)
 		if err != nil {
 			return "", err
 		}
@@ -97,7 +101,7 @@ func (app *App) registerBindings() {
 		if err != nil {
 			return "", err
 		}
-		return string(unsealed), nil
+		return base64.StdEncoding.EncodeToString(unsealed), nil
 	})
 
 	app.bind("alert", func(message string) {
