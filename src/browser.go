@@ -48,8 +48,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 		}
 	}
 
-	profileName := fmt.Sprintf("manual-%s-%d-profile", browser, profileId)
-	profilePath := path.Join(getStoragePath(), profileName)
+	profilePath := path.Join(getStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
 	os.Remove(devtoolsPortFile)
@@ -177,9 +176,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 }
 
 func (app *App) destroyBrowserProfile(browser string) error {
-	profileName := fmt.Sprintf("manual-%s-profile", browser)
-	profilePath := path.Join(getStoragePath(), profileName)
-
+	profilePath := path.Join(getStoragePath(), "profiles", browser)
 	return os.RemoveAll(profilePath)
 }
 
