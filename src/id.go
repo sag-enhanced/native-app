@@ -53,15 +53,16 @@ func (identity *Identity) Seal(data []byte) ([]byte, error) {
 	}
 
 	result := make([]byte, len(iv)+len(sealedKey)+len(sealed))
-	copy(result, iv)
-	copy(result[len(iv):], sealedKey)
-	copy(result[len(iv)+len(sealedKey):], sealed)
+	copy(result, sealedKey)
+	copy(result[len(sealedKey):], iv)
+	copy(result[len(sealedKey)+len(iv):], sealed)
 
 	return result, nil
 }
 
 func (identity *Identity) Unseal(data []byte) ([]byte, error) {
-	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.private, data[:256], nil)
+	sealedKeyLen := 512
+	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.private, data[:sealedKeyLen], nil)
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +75,8 @@ func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	iv := data[256 : 256+cipher.NonceSize()]
-	sealed := data[256+cipher.NonceSize():]
+	iv := data[sealedKeyLen : sealedKeyLen+cipher.NonceSize()]
+	sealed := data[sealedKeyLen+cipher.NonceSize():]
 
 	plain, err := cipher.Open(nil, iv, sealed, nil)
 	if err != nil {
