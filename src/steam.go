@@ -62,13 +62,16 @@ func (app *App) findSteamDataDir() (string, error) {
 		return "", err
 	}
 	parent := filepath.Dir(executable)
-	for {
+	for len(parent) > 1 {
 		_, err := os.Stat(filepath.Join(parent, "steamui"))
 		if err == nil || !os.IsNotExist(err) {
 			break
 		}
 		parent = filepath.Dir(parent)
 	}
+  if len(parent) <= 1 {
+    return "", errors.New("Steam data directory not found")
+  }
 	return parent, nil
 }
 
