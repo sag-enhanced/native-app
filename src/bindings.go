@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -266,6 +267,7 @@ func (app *App) registerBindings() {
 	})
 
 	clientHandles := map[string]http.Client{}
+	clientHandleLock := sync.Mutex{}
 	app.bind("httpClient", func(proxyUrl *string) (string, error) {
 		rawHandle := make([]byte, 16)
 		if _, err := rand.Read(rawHandle); err != nil {
@@ -288,12 +290,16 @@ func (app *App) registerBindings() {
 		if app.options.Verbose {
 			fmt.Println("Created new HTTP client with handle", handle)
 		}
+		clientHandleLock.Lock()
 		clientHandles[handle] = http.Client{Jar: jar, Transport: &http.Transport{Proxy: proxy}}
+		clientHandleLock.Unlock()
 		return handle, nil
 	})
 
 	app.bind("httpRequest", func(handle string, method string, url string, headers map[string]string, body string) (*HTTPResponse, error) {
+		clientHandleLock.Lock()
 		client, ok := clientHandles[handle]
+		clientHandleLock.Unlock()
 		if !ok {
 			return nil, errors.New("invalid handle")
 		}
@@ -346,7 +352,9 @@ func (app *App) registerBindings() {
 	})
 
 	app.bind("httpCookie", func(handle string, domain string, name string, value *string) (string, error) {
+		clientHandleLock.Lock()
 		client, ok := clientHandles[handle]
+		clientHandleLock.Unlock()
 		if !ok {
 			return "", errors.New("invalid handle")
 		}
@@ -368,7 +376,9 @@ func (app *App) registerBindings() {
 		if app.options.Verbose {
 			fmt.Println("Destroying HTTP client with handle", handle)
 		}
+		clientHandleLock.Lock()
 		delete(clientHandles, handle)
+		clientHandleLock.Unlock()
 	})
 
 	app.bind("ext", func(browser string) (*map[string]string, error) {
@@ -448,6 +458,7 @@ func (app *App) registerBindings() {
 	// browser automation
 	browserResultHandles := map[string]chan string{}
 	browserStopHandles := map[string]chan string{}
+	browserHandleLock := sync.Mutex{}
 	app.bind("browserNew", func(pageUrl string, code string, browser string, proxy *string, profileId int32) (string, error) {
 		rawHandle := make([]byte, 16)
 		var err error
@@ -475,12 +486,16 @@ func (app *App) registerBindings() {
 			}
 		}()
 
+		browserHandleLock.Lock()
 		browserResultHandles[handle] = chResult
 		browserStopHandles[handle] = chStop
+		browserHandleLock.Unlock()
 		return handle, nil
 	})
 	app.bind("browserGet", func(handle string, timeout int64) (string, error) {
+		browserHandleLock.Lock()
 		chResult, ok := browserResultHandles[handle]
+		browserHandleLock.Unlock()
 		if !ok {
 			return "", errors.New("invalid handle")
 		}
@@ -498,8 +513,9 @@ func (app *App) registerBindings() {
 		}
 	})
 	app.bind("browserDestroy", func(handle string) {
+		browserHandleLock.Lock()
+		defer browserHandleLock.Unlock()
 		delete(browserResultHandles, handle)
-
 		chStop, ok := browserStopHandles[handle]
 		if !ok {
 			return
