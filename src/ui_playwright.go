@@ -66,6 +66,13 @@ func (pwui *PlaywrightUII) run() {
 		Content: playwright.String(js),
 	})
 
+	if pwui.app.options.RemotejsSession != "" {
+		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", pwui.app.options.RemotejsSession)
+		pwui.page.AddInitScript(playwright.Script{
+			Content: playwright.String(js),
+		})
+	}
+
 	pwui.mainThread = make(chan func())
 	pwui.initBinding()
 
