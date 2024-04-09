@@ -77,3 +77,27 @@ jobs:
         with:
           file: ./bin/sage-darwin-*
           file_glob: true
+
+  darwin-m1:
+    name: Release Darwin M1 Binary
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+      - name: Build
+        run: |
+          go build -ldflags="-s -w" -o bin/sage-darwin-arm64 .
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sage-darwin-arm64
+          path: ./bin/sage-darwin-*
+          if-no-files-found: error
+      - if: github.event_name == 'release'
+        name: Upload assets to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./bin/sage-darwin-*
+          file_glob: true
