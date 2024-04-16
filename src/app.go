@@ -2,41 +2,23 @@ package app
 
 import (
 	"os"
-	"time"
+
+	"github.com/sag-enhanced/native-app/src/bindings"
+	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/options"
+	"github.com/sag-enhanced/native-app/src/ui"
 )
 
-type App struct {
-	identity *Identity
-	fm       *FileManager
-	start    int64
-	bindings map[string]func(req string) (interface{}, error)
-	options  Options
+func Run(options *options.Options) {
+	os.MkdirAll(file.GetStoragePath(), 0755)
 
-	ui UII
-}
-
-func NewApp(options Options) *App {
-	os.MkdirAll(getStoragePath(), 0755)
-
-	fm, err := NewFileManager()
+	fm, err := file.NewFileManager()
 	if err != nil {
 		panic(err)
 	}
+	ui := ui.NewUI(options)
 
-	start := time.Now().UnixMilli()
-
-	app := &App{fm: fm, start: start, bindings: map[string]func(req string) (interface{}, error){}, options: options}
-
-	if options.UI == PlaywrightUI {
-		app.ui = createPlaywrightUII(app)
-	} else {
-		app.ui = createWebviewUII(app)
-	}
-
-	return app
-}
-
-func (app *App) Run() {
-	app.registerBindings()
-	app.ui.run()
+	bindings := bindings.NewBindings(options, ui, fm)
+	ui.SetBindHandler(bindings.BindHandler)
+	ui.Run()
 }

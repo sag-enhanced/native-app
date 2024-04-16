@@ -1,25 +1,25 @@
-package app
+package ui
 
 import (
 	"fmt"
 	"net/url"
 
 	"github.com/playwright-community/playwright-go"
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
 type PlaywrightUII struct {
-	app        *App
-	page       playwright.Page
-	mainThread chan func()
+	page        playwright.Page
+	mainThread  chan func()
+	options     *options.Options
+	bindHandler bindHandler
 }
 
-func createPlaywrightUII(app *App) *PlaywrightUII {
-	return &PlaywrightUII{
-		app: app,
-	}
+func createPlaywrightUII(options *options.Options) *PlaywrightUII {
+	return &PlaywrightUII{options: options}
 }
 
-func (pwui *PlaywrightUII) run() {
+func (pwui *PlaywrightUII) Run() {
 	options := playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(false),
 		Args: []string{
@@ -59,15 +59,15 @@ func (pwui *PlaywrightUII) run() {
 	}
 	defer pwui.page.Close()
 
-	origin := pwui.app.options.getRealmOrigin()
+	origin := pwui.options.GetRealmOrigin()
 	// security measure to prevent any funny business
 	js := fmt.Sprintf("if(location.origin !== %q)location.href=%q", origin, origin)
 	pwui.page.AddInitScript(playwright.Script{
 		Content: playwright.String(js),
 	})
 
-	if pwui.app.options.RemotejsSession != "" {
-		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", pwui.app.options.RemotejsSession)
+	if pwui.options.RemotejsSession != "" {
+		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", pwui.options.RemotejsSession)
 		pwui.page.AddInitScript(playwright.Script{
 			Content: playwright.String(js),
 		})
@@ -81,7 +81,7 @@ func (pwui *PlaywrightUII) run() {
 		pwui.mainThread <- func() {}
 	})
 
-	pwui.page.Goto(pwui.app.options.getRealmOrigin())
+	pwui.page.Goto(pwui.options.GetRealmOrigin())
 
 	for !pwui.page.IsClosed() {
 		select {
@@ -91,8 +91,8 @@ func (pwui *PlaywrightUII) run() {
 	}
 }
 
-func (pwui *PlaywrightUII) eval(code string) {
-	if pwui.app.options.Verbose {
+func (pwui *PlaywrightUII) Eval(code string) {
+	if pwui.options.Verbose {
 		fmt.Println("Eval:", code)
 	}
 	pwui.mainThread <- func() {
@@ -100,7 +100,7 @@ func (pwui *PlaywrightUII) eval(code string) {
 	}
 }
 
-func (pwui *PlaywrightUII) quit() {
+func (pwui *PlaywrightUII) Quit() {
 	pwui.mainThread <- func() {
 		pwui.page.Close()
 	}
@@ -117,7 +117,7 @@ func (pwui *PlaywrightUII) initBinding() {
 		}
 
 		callerOrigin := fmt.Sprintf("%s://%s", caller.Scheme, caller.Host)
-		if callerOrigin != pwui.app.options.getRealmOrigin() {
+		if callerOrigin != pwui.options.GetRealmOrigin() {
 			return fmt.Errorf("sage() is not allowed to be called from %q", callerOrigin)
 		}
 
@@ -125,6 +125,10 @@ func (pwui *PlaywrightUII) initBinding() {
 		callId := args[1].(int)
 		params := args[2].(string)
 
-		return pwui.app.bindHandler(method, callId, params)
+		return pwui.bindHandler(method, callId, params)
 	})
+}
+
+func (pwui *PlaywrightUII) SetBindHandler(handler bindHandler) {
+	pwui.bindHandler = handler
 }

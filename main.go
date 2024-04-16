@@ -8,29 +8,36 @@ import (
 	"time"
 
 	"github.com/sag-enhanced/native-app/src"
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
 func main() {
-	var options app.Options
+	opt := options.NewOptions()
 	var openCommand string
-	flag.StringVar(&options.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
-	flag.StringVar(&options.Realm, "realm", "stable", "Run the app in the specified realm")
-	flag.BoolVar(&options.Verbose, "verbose", false, "Enable VERY verbose logging")
+	var buildOverride int
+	var loopbackPort int
+	flag.StringVar(&opt.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
+	flag.StringVar(&opt.Realm, "realm", "stable", "Run the app in the specified realm")
+	flag.BoolVar(&opt.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
-	flag.StringVar(&options.UI, "ui", "", "UI to use (webview or playwright)")
-	flag.BoolVar(&options.SteamDev, "steamdev", false, "Enable Steam Dev mode")
+	flag.StringVar(&opt.UI, "ui", "", "UI to use (webview or playwright)")
+	flag.BoolVar(&opt.SteamDev, "steamdev", false, "Enable Steam Dev mode")
+	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
+	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d)", opt.LoopbackPort))
 	flag.Parse()
 
 	if openCommand != "" {
-		options.OpenCommand = strings.Split(openCommand, " ")
-	} else {
-		options.OpenCommand = app.GetDefaultOpenCommand()
+		opt.OpenCommand = strings.Split(openCommand, " ")
 	}
-	if options.UI == "" {
-		options.UI = app.GetPreferredUI()
+	if buildOverride != -1 {
+		fmt.Println("WARNING: Build number override is not recommended and may cause issues.")
+		opt.Build = uint32(buildOverride)
+	}
+	if loopbackPort != -1 {
+		opt.LoopbackPort = uint16(loopbackPort)
 	}
 
-	if options.RemotejsSession != "" {
+	if opt.RemotejsSession != "" {
 		var allow string
 		fmt.Println("Debug session requested using -remote flag")
 		fmt.Println("A debug session will allow others to connect to your app and debug it remotely. Please make sure you are communicating with official staff.")
@@ -42,10 +49,9 @@ func main() {
 		}
 	}
 
-	app := app.NewApp(options)
 	start := time.Now()
 
-	app.Run()
+	app.Run(opt)
 
 	elapsed := time.Since(start)
 	if elapsed.Seconds() < 2 {

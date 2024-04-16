@@ -1,11 +1,11 @@
-package app
+package file
 
 import (
 	"os"
 	"runtime"
 )
 
-func getStoragePath() string {
+func GetStoragePath() string {
 	if runtime.GOOS == "windows" {
 		return os.ExpandEnv("${APPDATA}/sage")
 	} else if runtime.GOOS == "darwin" {

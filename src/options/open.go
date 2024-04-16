@@ -1,9 +1,6 @@
-package app
+package options
 
-import (
-	"os/exec"
-	"runtime"
-)
+import "runtime"
 
 func GetDefaultOpenCommand() []string {
 	if runtime.GOOS == "windows" {
@@ -12,9 +9,4 @@ func GetDefaultOpenCommand() []string {
 		return []string{"open"}
 	}
 	return []string{"xdg-open"}
-}
-
-func (app App) open(url string) {
-	args := append(app.options.OpenCommand, url)
-	exec.Command(args[0], args[1:]...).Run()
 }

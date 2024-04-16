@@ -1,4 +1,4 @@
-package app
+package helper
 
 import (
 	"crypto"
@@ -12,6 +12,8 @@ import (
 	"errors"
 	"os"
 	"path"
+
+	"github.com/sag-enhanced/native-app/src/file"
 )
 
 type Identity struct {
@@ -46,7 +48,7 @@ func (identity *Identity) Seal(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	sealed := cipher.Seal(nil, iv, pad(data, aes.BlockSize), nil)
+	sealed := cipher.Seal(nil, iv, file.Pad(data, aes.BlockSize), nil)
 	sealedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &identity.private.PublicKey, key, nil)
 	if err != nil {
 		return nil, err
@@ -83,15 +85,15 @@ func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return unpad(plain), nil
+	return file.Unpad(plain), nil
 }
 
-func loadIdentity(fm *FileManager) (*Identity, error) {
-	idFileNew := path.Join(getStoragePath(), "sage2.id")
+func LoadIdentity(fm *file.FileManager) (*Identity, error) {
+	idFileNew := path.Join(file.GetStoragePath(), "sage2.id")
 	data, err := fm.ReadFile(idFileNew)
 	if err != nil {
 		// migration for old id file (pre b7)
-		idFileOld := path.Join(getStoragePath(), "sage.id")
+		idFileOld := path.Join(file.GetStoragePath(), "sage.id")
 		data, err = os.ReadFile(idFileOld)
 		if err == nil {
 			err = fm.WriteFile(idFileNew, data, false)
@@ -125,15 +127,4 @@ func loadIdentity(fm *FileManager) (*Identity, error) {
 	}
 
 	return &Identity{private: private}, nil
-}
-
-func (app *App) getIdentity() (*Identity, error) {
-	if app.identity == nil {
-		identity, err := loadIdentity(app.fm)
-		if err != nil {
-			return nil, err
-		}
-		app.identity = identity
-	}
-	return app.identity, nil
 }

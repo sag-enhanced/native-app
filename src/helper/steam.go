@@ -1,4 +1,4 @@
-package app
+package helper
 
 import (
 	"errors"
@@ -9,13 +9,15 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/options"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
 // looking where the steam executable is from currently running processes
 // seemed like the most reliable way to find it on all platforms
-func (app App) findSteamExecutable() (string, error) {
-	storagePath := getStoragePath()
+func FindSteamExecutable(options *options.Options) (string, error) {
+	storagePath := file.GetStoragePath()
 	cache := filepath.Join(storagePath, "steam_executable.txt")
 	if _, err := os.Stat(cache); err == nil {
 		data, err := os.ReadFile(cache)
@@ -32,7 +34,7 @@ func (app App) findSteamExecutable() (string, error) {
 		// we are opening steam now
 		// opening the console just for why not
 		// the code that is calling this will close steam immediately afterwards anyway
-		app.open("steam://open/console")
+		Open("steam://open/console", options)
 		for {
 			if process, err = findSteamProcess(); err != nil {
 				break
@@ -51,13 +53,13 @@ func (app App) findSteamExecutable() (string, error) {
 	return exe, nil
 }
 
-func (app *App) findSteamDataDir() (string, error) {
+func FindSteamDataDir(options *options.Options) (string, error) {
 	if runtime.GOOS == "darwin" {
 		// the application in /Applications is just the bootstrapper, the real executable
 		// is installed per user right here:
 		return filepath.Join(os.Getenv("HOME"), "Library/Application Support/Steam/Steam.AppBundle/Steam/Contents/MacOS"), nil
 	}
-	executable, err := app.findSteamExecutable()
+	executable, err := FindSteamExecutable(options)
 	if err != nil {
 		return "", err
 	}
@@ -69,9 +71,9 @@ func (app *App) findSteamDataDir() (string, error) {
 		}
 		parent = filepath.Dir(parent)
 	}
-  if len(parent) <= 1 {
-    return "", errors.New("Steam data directory not found")
-  }
+	if len(parent) <= 1 {
+		return "", errors.New("Steam data directory not found")
+	}
 	return parent, nil
 }
 
@@ -92,15 +94,15 @@ func findSteamProcess() (*process.Process, error) {
 	return nil, errors.New("Steam process not found")
 }
 
-func (app *App) runSteamWithArguments(args ...string) error {
-	executable, err := app.findSteamExecutable()
+func RunSteamWithArguments(options *options.Options, args ...string) error {
+	executable, err := FindSteamExecutable(options)
 	if err != nil {
 		return err
 	}
-	if app.options.SteamDev {
+	if options.SteamDev {
 		args = append(args, "-dev")
 	}
-	if app.options.Verbose {
+	if options.Verbose {
 		fmt.Println("Running Steam with arguments:", executable, args)
 	}
 	cmd := exec.Command(executable, args...)
@@ -111,7 +113,7 @@ func (app *App) runSteamWithArguments(args ...string) error {
 	return nil
 }
 
-func (app *App) closeSteam() error {
+func CloseSteam(options *options.Options) error {
 	killed := int32(0)
 	for {
 		var process *process.Process
@@ -121,14 +123,14 @@ func (app *App) closeSteam() error {
 		}
 		if process.Pid != killed {
 			// new process found (this can happen if we close steam while its still bootstrapping)
-			if app.options.Verbose {
+			if options.Verbose {
 				fmt.Println("Steam running, shutting it down...")
 			}
 
-			app.runSteamWithArguments("-shutdown")
+			RunSteamWithArguments(options, "-shutdown")
 			killed = process.Pid
 		}
-		if app.options.Verbose {
+		if options.Verbose {
 			fmt.Println("Waiting for Steam to shut down...", process.Pid)
 		}
 		time.Sleep(1 * time.Second)

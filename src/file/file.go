@@ -1,4 +1,4 @@
-package app
+package file
 
 import (
 	"bytes"
@@ -27,21 +27,21 @@ const (
 )
 
 type FileManager struct {
-	manifest *EncryptionManifest
-	cipher   *cipher.Block
+	Manifest *EncryptionManifest
+	Cipher   *cipher.Block
 	files    []string
 }
 
 func NewFileManager() (*FileManager, error) {
 	fm := &FileManager{}
-	manifestPath := path.Join(getStoragePath(), "manifest.json")
+	manifestPath := path.Join(GetStoragePath(), "manifest.json")
 	manifestContent, err := os.ReadFile(manifestPath)
 	if err == nil {
 		var manifest EncryptionManifest
 		if err := json.Unmarshal(manifestContent, &manifest); err != nil {
 			return nil, err
 		}
-		fm.manifest = &manifest
+		fm.Manifest = &manifest
 		if manifest.Version != 1 {
 			return nil, errors.New("unsupported manifest version")
 		}
@@ -76,10 +76,10 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 	if header == FileHeaderRaw {
 		return data[1:], nil
 	} else if header == FileHeaderEncrypted {
-		if fm.cipher == nil {
+		if fm.Cipher == nil {
 			return nil, errors.New("encrypted")
 		}
-		aesCipher, err := cipher.NewGCM(*fm.cipher)
+		aesCipher, err := cipher.NewGCM(*fm.Cipher)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 			return nil, err
 		}
 
-		return fm.unpack(unpad(content))
+		return fm.unpack(Unpad(content))
 	} else if header == FileHeaderCompressed {
 		reader := flate.NewReader(bytes.NewReader(data[1:]))
 		decompressed, err := io.ReadAll(reader)
@@ -134,7 +134,7 @@ func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 }
 
 func (fm *FileManager) GetFilename(name string) string {
-	return path.Join(getStoragePath(), "data", name+".dat")
+	return path.Join(GetStoragePath(), "data", name+".dat")
 }
 
 func (fm *FileManager) DeriveKey(password string, salt []byte) []byte {
@@ -147,11 +147,11 @@ func (fm *FileManager) DeriveKey(password string, salt []byte) []byte {
 }
 
 func (fm *FileManager) TryLoadKey(password string) error {
-	if fm.manifest == nil {
+	if fm.Manifest == nil {
 		return errors.New("no manifest")
 	}
 
-	salt, err := hex.DecodeString(fm.manifest.Salt)
+	salt, err := hex.DecodeString(fm.Manifest.Salt)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (fm *FileManager) TryLoadKey(password string) error {
 
 	control := sha256.Sum256(key)
 	encoded := hex.EncodeToString(control[:])
-	for _, k := range fm.manifest.Keys {
+	for _, k := range fm.Manifest.Keys {
 		// we dont need to use a constant time comparison here because the hash is already public
 		if k.Hash == encoded {
 			secret, err := hex.DecodeString(k.Secret)
@@ -178,7 +178,7 @@ func (fm *FileManager) TryLoadKey(password string) error {
 			if err != nil {
 				return err
 			}
-			fm.cipher = &cipher
+			fm.Cipher = &cipher
 			return nil
 		}
 	}
@@ -219,7 +219,7 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 		Keys:    keys,
 	}
 
-	manifestPath := path.Join(getStoragePath(), "manifest.json")
+	manifestPath := path.Join(GetStoragePath(), "manifest.json")
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return err
@@ -232,8 +232,8 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 	if err != nil {
 		return err
 	}
-	fm.manifest = &manifest
-	fm.cipher = &cipher
+	fm.Manifest = &manifest
+	fm.Cipher = &cipher
 	return nil
 }
 
@@ -243,8 +243,8 @@ func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if fm.cipher != nil && !ignoreCipher {
-		aesCipher, err := cipher.NewGCM(*fm.cipher)
+	if fm.Cipher != nil && !ignoreCipher {
+		aesCipher, err := cipher.NewGCM(*fm.Cipher)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +252,7 @@ func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 			return nil, err
 		}
-		encrypted := aesCipher.Seal(nil, nonce, pad(data, aes.BlockSize), nil)
+		encrypted := aesCipher.Seal(nil, nonce, Pad(data, aes.BlockSize), nil)
 		data = make([]byte, 1+len(nonce)+len(encrypted))
 		data[0] = byte(FileHeaderEncrypted)
 		copy(data[1:], nonce)
@@ -285,12 +285,12 @@ func tryCompress(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func pad(data []byte, blockSize int) []byte {
+func Pad(data []byte, blockSize int) []byte {
 	padding := blockSize - (len(data) % blockSize)
 	return append(data, bytes.Repeat([]byte{byte(padding)}, padding)...)
 }
 
-func unpad(data []byte) []byte {
+func Unpad(data []byte) []byte {
 	padding := int(data[len(data)-1])
 	return data[:len(data)-padding]
 }

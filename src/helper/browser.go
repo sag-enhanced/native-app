@@ -1,4 +1,4 @@
-package app
+package helper
 
 import (
 	"context"
@@ -18,11 +18,13 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/playwright-community/playwright-go"
+	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
-func (app *App) runBrowser(chResult chan string, chStop chan string, url string, code string, browser string, proxy *url.URL, profileId int32) error {
+func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code string, browser string, proxy *url.URL, profileId int32) error {
 	defer func() {
-		chResult <- "closed"
+		ch.Result <- "closed"
 	}()
 
 	exe := ""
@@ -48,7 +50,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 		}
 	}
 
-	profilePath := path.Join(getStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
+	profilePath := path.Join(file.GetStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
 	os.Remove(devtoolsPortFile)
@@ -65,13 +67,13 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 		args = append(args, fmt.Sprintf("--proxy-server=%s://%s", proxy.Scheme, proxy.Host))
 	}
 
-	if extensions, err := getExtensionList(); err == nil {
+	if extensions, err := getExtensionList(browser); err == nil {
 		for _, ext := range extensions {
 			args = append(args, "--load-extension="+ext)
 		}
 	}
 
-	if app.options.Verbose {
+	if options.Verbose {
 		fmt.Println("Running browser with args", args)
 	}
 
@@ -87,7 +89,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 
 	for _, err := os.Stat(devtoolsPortFile); err != nil; _, err = os.Stat(devtoolsPortFile) {
 		time.Sleep(100 * time.Millisecond)
-		if app.options.Verbose {
+		if options.Verbose {
 			fmt.Println("Waiting for DevToolsActivePort file to be created")
 		}
 	}
@@ -96,7 +98,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	if err != nil {
 		return err
 	}
-	if app.options.Verbose {
+	if options.Verbose {
 		fmt.Println("DevToolsActivePort file contents", string(devtoolsPortRaw))
 	}
 	devtoolsPort, err := strconv.Atoi(strings.Split(string(devtoolsPortRaw), "\n")[0])
@@ -105,7 +107,7 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	}
 
 	wsURL := fmt.Sprintf("ws://127.0.0.1:%d", devtoolsPort)
-	if app.options.Verbose {
+	if options.Verbose {
 		fmt.Println("Connecting to", wsURL)
 	}
 
@@ -131,16 +133,16 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	}
 
 	chromedp.ListenTarget(ctx, func(ev interface{}) {
-		if app.options.Verbose {
+		if options.Verbose {
 			fmt.Printf("Event %T\n", ev)
 		}
 		switch ev := ev.(type) {
 		case *page.EventJavascriptDialogOpening:
-			if app.options.Verbose {
+			if options.Verbose {
 				fmt.Println("Dialog:", ev.Message)
 			}
 			if strings.HasPrefix(ev.Message, "SAGE#") {
-				chResult <- ev.Message[5:]
+				ch.Result <- ev.Message[5:]
 			}
 			go func() {
 				page.HandleJavaScriptDialog(true).Do(cdp.WithExecutor(ctx, c.Target))
@@ -169,19 +171,19 @@ func (app *App) runBrowser(chResult chan string, chStop chan string, url string,
 	}
 
 	select {
-	case <-chStop:
+	case <-ch.Stop:
 	case <-ctx.Done():
 	}
 	return nil
 }
 
-func (app *App) destroyBrowserProfile(browser string) error {
-	profilePath := path.Join(getStoragePath(), "profiles", browser)
+func DestroyBrowserProfile(browser string) error {
+	profilePath := path.Join(file.GetStoragePath(), "profiles", browser)
 	return os.RemoveAll(profilePath)
 }
 
-func getExtensionList() ([]string, error) {
-	ext := path.Join(getStoragePath(), "ext", "chromium")
+func getExtensionList(browser string) ([]string, error) {
+	ext := path.Join(file.GetStoragePath(), "ext", browser)
 	files, err := os.ReadDir(ext)
 	extensions := []string{}
 	if err != nil {
@@ -235,4 +237,9 @@ func findBrowserBinary(browser string) (string, error) {
 	}
 
 	return "", fmt.Errorf("Browser binary not found")
+}
+
+type BrowserChannels struct {
+	Result chan string
+	Stop   chan string
 }
