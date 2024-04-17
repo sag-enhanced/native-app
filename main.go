@@ -17,10 +17,10 @@ func main() {
 	var buildOverride int
 	var loopbackPort int
 	flag.StringVar(&opt.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
-	flag.StringVar(&opt.Realm, "realm", "stable", "Run the app in the specified realm")
+	flag.StringVar(&opt.Realm, "realm", options.StableRealm, "Run the app in the specified realm")
 	flag.BoolVar(&opt.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
-	flag.StringVar(&opt.UI, "ui", "", "UI to use (webview or playwright)")
+	flag.StringVar(&opt.UI, "ui", opt.UI, "UI to use (webview or playwright)")
 	flag.BoolVar(&opt.SteamDev, "steamdev", false, "Enable Steam Dev mode")
 	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
 	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d)", opt.LoopbackPort))
