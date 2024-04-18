@@ -54,7 +54,7 @@ func (b *Bindings) HttpRequest(handle string, method string, url string, headers
 	}
 	var reader io.Reader
 	if strings.HasPrefix(body, "data:") {
-		reader = base64.NewDecoder(base64.StdEncoding, strings.NewReader(strings.Split(body, ",")[1]))
+		reader = base64.NewDecoder(base64.StdEncoding, strings.NewReader(strings.SplitN(body, ",", 2)[1]))
 	} else {
 		reader = strings.NewReader(body)
 	}

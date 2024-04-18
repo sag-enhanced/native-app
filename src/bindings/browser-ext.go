@@ -48,7 +48,7 @@ func (b *Bindings) ExtInstall(name string, browser string, download string) erro
 	if !strings.HasPrefix(download, "https://github.com/") || strings.Contains(download, "..") {
 		return errors.New("invalid download URL")
 	}
-	if strings.Contains(name, "..") {
+	if path.Clean(name) != name {
 		return errors.New("invalid extension name")
 	}
 
@@ -58,7 +58,7 @@ func (b *Bindings) ExtInstall(name string, browser string, download string) erro
 }
 
 func (b *Bindings) ExtGetManifest(name string, browser string) (string, error) {
-	if strings.Contains(name, "..") {
+	if path.Clean(name) != name {
 		return "", errors.New("invalid extension name")
 	}
 
@@ -72,7 +72,7 @@ func (b *Bindings) ExtGetManifest(name string, browser string) (string, error) {
 }
 
 func (b *Bindings) ExtSetManifest(name string, browser string, manifest string) error {
-	if strings.Contains(name, "..") {
+	if path.Clean(name) != name {
 		return errors.New("invalid extension name")
 	}
 
@@ -81,7 +81,7 @@ func (b *Bindings) ExtSetManifest(name string, browser string, manifest string) 
 }
 
 func (b *Bindings) ExtUninstall(name string, browser string) error {
-	if strings.Contains(name, "..") {
+	if path.Clean(name) != name {
 		return errors.New("invalid extension name")
 	}
 
