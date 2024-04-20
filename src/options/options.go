@@ -14,7 +14,7 @@ type Options struct {
 
 func NewOptions() *Options {
 	return &Options{
-		Build:        7,
+		Build:        8,
 		LoopbackPort: 8666,
 
 		UI:          GetPreferredUI(),
