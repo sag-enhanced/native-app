@@ -87,7 +87,10 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 
 	defer cmd.Process.Kill()
 
-	for _, err := os.Stat(devtoolsPortFile); err != nil; _, err = os.Stat(devtoolsPortFile) {
+	for i := 0; i < 100; i++ {
+		if _, err := os.Stat(devtoolsPortFile); err == nil {
+			break
+		}
 		time.Sleep(100 * time.Millisecond)
 		if options.Verbose {
 			fmt.Println("Waiting for DevToolsActivePort file to be created")
