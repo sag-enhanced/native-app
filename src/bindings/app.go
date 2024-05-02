@@ -1,6 +1,7 @@
 package bindings
 
 import (
+	"os"
 	"runtime"
 	"time"
 
@@ -28,6 +29,7 @@ func (b *Bindings) Info() (map[string]any, error) {
 		"arch":  runtime.GOARCH,
 		"id":    id,
 		"port":  b.options.LoopbackPort,
+		"args":  os.Args,
 	}, nil
 }
 
