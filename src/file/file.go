@@ -13,7 +13,7 @@ import (
 	"io"
 	"os"
 	"path"
-	"slices"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -29,7 +29,6 @@ const (
 type FileManager struct {
 	Manifest *EncryptionManifest
 	Cipher   *cipher.Block
-	files    []string
 }
 
 func NewFileManager() (*FileManager, error) {
@@ -61,9 +60,6 @@ type EncryptionKey struct {
 }
 
 func (fm *FileManager) ReadFile(filename string) ([]byte, error) {
-	if !slices.Contains(fm.files, filename) {
-		fm.files = append(fm.files, filename)
-	}
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -101,9 +97,6 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 }
 
 func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool) error {
-	if !slices.Contains(fm.files, filename) {
-		fm.files = append(fm.files, filename)
-	}
 	packed, err := fm.pack(data, ignoreCipher)
 	if err != nil {
 		return err
@@ -119,7 +112,20 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 
 func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 	errors := []error{}
-	for _, filename := range fm.files {
+	fileNames := []string{}
+	if files, err := os.ReadDir(path.Join(GetStoragePath(), "data")); err == nil {
+		for _, file := range files {
+			fileNames = append(fileNames, path.Join(GetStoragePath(), "data", file.Name()))
+		}
+	}
+	if files, err := os.ReadDir(GetStoragePath()); err == nil {
+		for _, file := range files {
+			if !file.IsDir() && strings.HasSuffix(file.Name(), ".id") {
+				fileNames = append(fileNames, path.Join(GetStoragePath(), file.Name()))
+			}
+		}
+	}
+	for _, filename := range fileNames {
 		data, err := fm.ReadFile(filename)
 		if err != nil {
 			errors = append(errors, err)
