@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 	"unicode/utf8"
 
@@ -82,12 +82,12 @@ func (b *Bindings) FsMkdir(dirname string) error {
 }
 
 func validateFilename(filename string) (string, error) {
-	cleaned := filepath.Clean(filename)
+	cleaned := path.Clean(strings.ReplaceAll(filename, "\\", "/"))
 	if cleaned != filename {
 		return "", errors.New("Invalid filename")
 	}
 
-	realName := filepath.Clean(filepath.Join(file.GetStoragePath(), "files", filename))
+	realName := path.Clean(path.Join(file.GetStoragePath(), "files", filename))
 	if !strings.HasPrefix(realName, file.GetStoragePath()) {
 		return "", errors.New("Invalid filename")
 	}
