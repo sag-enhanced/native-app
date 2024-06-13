@@ -26,19 +26,13 @@ func (wui *WebviewUII) Run() {
 	wui.webview.SetTitle(fmt.Sprintf("SAG Enhanced (b%d)", wui.options.Build))
 	wui.webview.SetSize(800, 600, webview_go.HintNone)
 
-	origin := wui.options.GetRealmOrigin()
-	// security measure to prevent any funny business
-	js := fmt.Sprintf("if(location.origin !== %q)location.href=%q", origin, origin)
-	wui.webview.Init(js)
-
 	wui.webview.Bind("sage", wui.bindHandler)
 
-	if wui.options.RemotejsSession != "" {
-		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", wui.options.RemotejsSession)
-		wui.webview.Init(js)
+	for _, script := range getScripts(wui.options) {
+		wui.webview.Init(script)
 	}
 
-	wui.webview.Navigate(origin)
+	wui.webview.Navigate(wui.options.GetRealmOrigin())
 	wui.webview.Run()
 }
 

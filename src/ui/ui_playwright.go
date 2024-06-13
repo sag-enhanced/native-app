@@ -59,17 +59,10 @@ func (pwui *PlaywrightUII) Run() {
 	}
 	defer pwui.page.Close()
 
-	origin := pwui.options.GetRealmOrigin()
-	// security measure to prevent any funny business
-	js := fmt.Sprintf("if(location.origin !== %q)location.href=%q", origin, origin)
-	pwui.page.AddInitScript(playwright.Script{
-		Content: playwright.String(js),
-	})
-
-	if pwui.options.RemotejsSession != "" {
-		js := fmt.Sprintf("addEventListener('DOMContentLoaded', () => {const s = document.createElement('script'); s.src='https://remotejs.com/agent/agent.js'; s.setAttribute('data-consolejs-channel', %q); document.head.appendChild(s)});", pwui.options.RemotejsSession)
+	scripts := getScripts(pwui.options)
+	for _, script := range scripts {
 		pwui.page.AddInitScript(playwright.Script{
-			Content: playwright.String(js),
+			Content: playwright.String(script),
 		})
 	}
 
