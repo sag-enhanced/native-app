@@ -1,5 +1,10 @@
 package options
 
+import (
+	"crypto/rand"
+	"encoding/base64"
+)
+
 type Options struct {
 	Build        uint32
 	LoopbackPort uint16
@@ -10,14 +15,21 @@ type Options struct {
 	RemotejsSession string
 	UI              UI
 	SteamDev        bool
+
+	CurrentUrlSecret string
 }
 
 func NewOptions() *Options {
+	secret := make([]byte, 32)
+	rand.Read(secret) // let's pray this doesn't fail
+
 	return &Options{
 		Build:        8,
 		LoopbackPort: 8666,
 
 		UI:          GetPreferredUI(),
 		OpenCommand: GetDefaultOpenCommand(),
+
+		CurrentUrlSecret: base64.RawURLEncoding.EncodeToString(secret),
 	}
 }

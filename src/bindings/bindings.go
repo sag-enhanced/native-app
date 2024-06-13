@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -13,13 +14,14 @@ import (
 )
 
 type Bindings struct {
-	options *options.Options
-	ui      ui.UII
-	fm      *file.FileManager
+	options    *options.Options
+	ui         ui.UII
+	fm         *file.FileManager
+	currentUrl *url.URL
 }
 
 func NewBindings(options *options.Options, ui ui.UII, fm *file.FileManager) *Bindings {
-	return &Bindings{options, ui, fm}
+	return &Bindings{options, ui, fm, nil}
 }
 
 // our own RPC engine ontop of the one that webview already provides

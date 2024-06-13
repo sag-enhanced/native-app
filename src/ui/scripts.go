@@ -14,6 +14,10 @@ func getScripts(options *options.Options) []string {
 	js := fmt.Sprintf("if([%q, 'id.sage.party'].indexOf(location.origin)===-1)location.href=%q", origin, origin)
 	scripts = append(scripts, js)
 
+	// expose current URL
+	js = fmt.Sprintf("window.saged=window.saged||[];window.sage('setUrl',windwo.saged.push([()=>{},console.error.bind(console)]),JSON.stringify([location.href, %q]))", options.CurrentUrlSecret)
+	scripts = append(scripts, js)
+
 	// inject remotejs agent
 	// we inject it here because we cant trust the main js to work (why else would we be debugging it?)
 	if options.RemotejsSession != "" {
