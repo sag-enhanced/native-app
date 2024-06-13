@@ -64,7 +64,7 @@ jobs:
       - uses: actions/setup-go@v5
       - name: Build
         run: |
-          go build -ldflags="-s -w" -o bin/sage-darwin-amd64 .
+          go build -ldflags="-s -w" -o bin/sage-darwin-amd64 -tags CI .
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
