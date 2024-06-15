@@ -15,7 +15,7 @@ import (
 	"path"
 	"strings"
 
-	"golang.org/x/crypto/argon2"
+	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 type FileHeader byte
@@ -33,7 +33,7 @@ type FileManager struct {
 
 func NewFileManager() (*FileManager, error) {
 	fm := &FileManager{}
-	manifestPath := path.Join(GetStoragePath(), "manifest.json")
+	manifestPath := path.Join(helper.GetStoragePath(), "manifest.json")
 	manifestContent, err := os.ReadFile(manifestPath)
 	if err == nil {
 		var manifest EncryptionManifest
@@ -84,7 +84,7 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 			return nil, err
 		}
 
-		return fm.unpack(Unpad(content))
+		return fm.unpack(helper.Unpad(content))
 	} else if header == FileHeaderCompressed {
 		reader := flate.NewReader(bytes.NewReader(data[1:]))
 		decompressed, err := io.ReadAll(reader)
@@ -113,15 +113,15 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 	errors := []error{}
 	fileNames := []string{}
-	if files, err := os.ReadDir(path.Join(GetStoragePath(), "data")); err == nil {
+	if files, err := os.ReadDir(path.Join(helper.GetStoragePath(), "data")); err == nil {
 		for _, file := range files {
-			fileNames = append(fileNames, path.Join(GetStoragePath(), "data", file.Name()))
+			fileNames = append(fileNames, path.Join(helper.GetStoragePath(), "data", file.Name()))
 		}
 	}
-	if files, err := os.ReadDir(GetStoragePath()); err == nil {
+	if files, err := os.ReadDir(helper.GetStoragePath()); err == nil {
 		for _, file := range files {
 			if !file.IsDir() && strings.HasSuffix(file.Name(), ".id") {
-				fileNames = append(fileNames, path.Join(GetStoragePath(), file.Name()))
+				fileNames = append(fileNames, path.Join(helper.GetStoragePath(), file.Name()))
 			}
 		}
 	}
@@ -140,16 +140,7 @@ func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 }
 
 func (fm *FileManager) GetFilename(name string) string {
-	return path.Join(GetStoragePath(), "data", name+".dat")
-}
-
-func (fm *FileManager) DeriveKey(password string, salt []byte) []byte {
-	memory := uint32(64 * 1024)
-	time := uint32(3)
-	threads := uint8(4)
-	bytes := uint32(32)
-
-	return argon2.IDKey([]byte(password), salt, time, memory, threads, bytes)
+	return path.Join(helper.GetStoragePath(), "data", name+".dat")
 }
 
 func (fm *FileManager) TryLoadKey(password string) error {
@@ -161,7 +152,7 @@ func (fm *FileManager) TryLoadKey(password string) error {
 	if err != nil {
 		return err
 	}
-	key := fm.DeriveKey(password, salt)
+	key := helper.DeriveKey(password, salt)
 
 	control := sha256.Sum256(key)
 	encoded := hex.EncodeToString(control[:])
@@ -203,7 +194,7 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 	}
 	keys := make([]EncryptionKey, len(passwords))
 	for i, password := range passwords {
-		key := fm.DeriveKey(password, salt)
+		key := helper.DeriveKey(password, salt)
 
 		cipher, err := aes.NewCipher(key)
 		if err != nil {
@@ -225,7 +216,7 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 		Keys:    keys,
 	}
 
-	manifestPath := path.Join(GetStoragePath(), "manifest.json")
+	manifestPath := path.Join(helper.GetStoragePath(), "manifest.json")
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return err
@@ -258,7 +249,7 @@ func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 			return nil, err
 		}
-		encrypted := aesCipher.Seal(nil, nonce, Pad(data, aes.BlockSize), nil)
+		encrypted := aesCipher.Seal(nil, nonce, helper.Pad(data, aes.BlockSize), nil)
 		data = make([]byte, 1+len(nonce)+len(encrypted))
 		data[0] = byte(FileHeaderEncrypted)
 		copy(data[1:], nonce)
@@ -289,14 +280,4 @@ func tryCompress(data []byte) ([]byte, error) {
 		return data, nil
 	}
 	return buf.Bytes(), nil
-}
-
-func Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - (len(data) % blockSize)
-	return append(data, bytes.Repeat([]byte{byte(padding)}, padding)...)
-}
-
-func Unpad(data []byte) []byte {
-	padding := int(data[len(data)-1])
-	return data[:len(data)-padding]
 }

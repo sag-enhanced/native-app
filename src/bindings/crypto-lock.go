@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 func (b *Bindings) EncryptionStatus() EncryptionStatus {
@@ -28,7 +28,7 @@ func (b *Bindings) EncryptionDisable() error {
 	if b.fm.Manifest != nil && b.fm.Cipher == nil {
 		return errors.New("need to decrypt files first")
 	}
-	os.Remove(path.Join(file.GetStoragePath(), "manifest.json"))
+	os.Remove(path.Join(helper.GetStoragePath(), "manifest.json"))
 	errs := b.fm.UpdateFiles(true)
 	b.fm.Cipher = nil
 	b.fm.Manifest = nil

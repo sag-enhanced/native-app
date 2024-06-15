@@ -18,7 +18,6 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"github.com/playwright-community/playwright-go"
-	"github.com/sag-enhanced/native-app/src/file"
 	"github.com/sag-enhanced/native-app/src/options"
 )
 
@@ -50,7 +49,7 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 		}
 	}
 
-	profilePath := path.Join(file.GetStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
+	profilePath := path.Join(GetStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
 	os.Remove(devtoolsPortFile)
@@ -181,12 +180,12 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 }
 
 func DestroyBrowserProfile(browser string) error {
-	profilePath := path.Join(file.GetStoragePath(), "profiles", browser)
+	profilePath := path.Join(GetStoragePath(), "profiles", browser)
 	return os.RemoveAll(profilePath)
 }
 
 func getExtensionList(browser string) ([]string, error) {
-	ext := path.Join(file.GetStoragePath(), "ext", browser)
+	ext := path.Join(GetStoragePath(), "ext", browser)
 	files, err := os.ReadDir(ext)
 	extensions := []string{}
 	if err != nil {

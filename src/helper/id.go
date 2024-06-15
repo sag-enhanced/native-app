@@ -12,21 +12,19 @@ import (
 	"errors"
 	"os"
 	"path"
-
-	"github.com/sag-enhanced/native-app/src/file"
 )
 
 type Identity struct {
-	private *rsa.PrivateKey
+	PrivateKey *rsa.PrivateKey
 }
 
 func (identity *Identity) Sign(data []byte) ([]byte, error) {
 	hash := sha256.Sum256(data)
-	return rsa.SignPSS(rand.Reader, identity.private, crypto.SHA256, hash[:], nil)
+	return rsa.SignPSS(rand.Reader, identity.PrivateKey, crypto.SHA256, hash[:], nil)
 }
 
 func (identity *Identity) Id() string {
-	data := x509.MarshalPKCS1PublicKey(&identity.private.PublicKey)
+	data := x509.MarshalPKCS1PublicKey(&identity.PrivateKey.PublicKey)
 	return string(pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: data}))
 }
 
@@ -48,8 +46,8 @@ func (identity *Identity) Seal(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	sealed := cipher.Seal(nil, iv, file.Pad(data, aes.BlockSize), nil)
-	sealedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &identity.private.PublicKey, key, nil)
+	sealed := cipher.Seal(nil, iv, Pad(data, aes.BlockSize), nil)
+	sealedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &identity.PrivateKey.PublicKey, key, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +62,7 @@ func (identity *Identity) Seal(data []byte) ([]byte, error) {
 
 func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 	sealedKeyLen := 512
-	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.private, data[:sealedKeyLen], nil)
+	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.PrivateKey, data[:sealedKeyLen], nil)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +83,20 @@ func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return file.Unpad(plain), nil
+	return Unpad(plain), nil
 }
 
-func LoadIdentity(fm *file.FileManager) (*Identity, error) {
-	idFileNew := path.Join(file.GetStoragePath(), "sage2.id")
+type fileManager interface {
+	ReadFile(name string) ([]byte, error)
+	WriteFile(name string, data []byte, dontEncrypt bool) error
+}
+
+func LoadIdentity(fm fileManager) (*Identity, error) {
+	idFileNew := path.Join(GetStoragePath(), "sage2.id")
 	data, err := fm.ReadFile(idFileNew)
 	if err != nil {
 		// migration for old id file (pre b7)
-		idFileOld := path.Join(file.GetStoragePath(), "sage.id")
+		idFileOld := path.Join(GetStoragePath(), "sage.id")
 		data, err = os.ReadFile(idFileOld)
 		if err == nil {
 			err = fm.WriteFile(idFileNew, data, false)
@@ -108,7 +111,7 @@ func LoadIdentity(fm *file.FileManager) (*Identity, error) {
 			return nil, err
 		}
 		if private, ok := private.(*rsa.PrivateKey); ok {
-			return &Identity{private: private}, nil
+			return &Identity{PrivateKey: private}, nil
 		}
 		return nil, errors.New("invalid private key")
 	}
@@ -126,5 +129,5 @@ func LoadIdentity(fm *file.FileManager) (*Identity, error) {
 		return nil, err
 	}
 
-	return &Identity{private: private}, nil
+	return &Identity{PrivateKey: private}, nil
 }

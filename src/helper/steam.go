@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/sag-enhanced/native-app/src/file"
 	"github.com/sag-enhanced/native-app/src/options"
 	"github.com/shirou/gopsutil/v3/process"
 )
@@ -17,7 +16,7 @@ import (
 // looking where the steam executable is from currently running processes
 // seemed like the most reliable way to find it on all platforms
 func FindSteamExecutable(options *options.Options) (string, error) {
-	storagePath := file.GetStoragePath()
+	storagePath := GetStoragePath()
 	cache := filepath.Join(storagePath, "steam_executable.txt")
 	if _, err := os.Stat(cache); err == nil {
 		data, err := os.ReadFile(cache)

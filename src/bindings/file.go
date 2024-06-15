@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 func (b *Bindings) FsReadFile(filename string) (string, error) {
@@ -87,8 +87,8 @@ func validateFilename(filename string) (string, error) {
 		return "", errors.New("Invalid filename")
 	}
 
-	realName := path.Clean(path.Join(file.GetStoragePath(), "files", filename))
-	if !strings.HasPrefix(realName, file.GetStoragePath()) {
+	realName := path.Clean(path.Join(helper.GetStoragePath(), "files", filename))
+	if !strings.HasPrefix(realName, helper.GetStoragePath()) {
 		return "", errors.New("Invalid filename")
 	}
 	return realName, nil
