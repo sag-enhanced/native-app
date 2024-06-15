@@ -20,6 +20,13 @@ go build
 You can also find pre-built binaries in the
 [releases](https://github.com/sag-enhanced/native-app/releases) section.
 
+## Issues
+
+If you have any issues with the app, please open an issue in the
+[issue tracker](https://github.com/sag-enhanced/sage-issues/issues). See
+[SECURITY.md](SECURITY.md) for more information on how to report security
+issues.
+
 ## LICENSE
 
 This project is licensed under a SOURCE AVAILABLE license. See the
