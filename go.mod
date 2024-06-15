@@ -7,6 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.9.5
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gen2brain/beeep v0.0.0-20240112042604-c7bb2cd88fea
+	github.com/go-jose/go-jose/v4 v4.0.2
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/playwright-community/playwright-go v0.4201.1
