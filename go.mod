@@ -7,10 +7,13 @@ require (
 	github.com/chromedp/chromedp v0.9.5
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/gen2brain/beeep v0.0.0-20240112042604-c7bb2cd88fea
+	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
+	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/playwright-community/playwright-go v0.4201.1
 	github.com/shirou/gopsutil/v3 v3.24.1
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070
+	golang.org/x/crypto v0.21.0
 )
 
 require (
@@ -28,11 +31,9 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/jezek/xgb v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/lxn/win v0.0.0-20210218163916-a377121e959e // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/makiuchi-d/gozxing v0.1.1 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
@@ -41,7 +42,6 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
