@@ -6,6 +6,7 @@ type UII interface {
 	Run()
 	Eval(code string)
 	SetBindHandler(handler bindHandler)
+	Navigate(url string)
 	Quit()
 }
 

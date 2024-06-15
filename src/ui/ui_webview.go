@@ -36,6 +36,12 @@ func (wui *WebviewUII) Run() {
 	wui.webview.Run()
 }
 
+func (wui *WebviewUII) Navigate(url string) {
+	wui.webview.Dispatch(func() {
+		wui.webview.Navigate(url)
+	})
+}
+
 func (wui *WebviewUII) Eval(code string) {
 	if wui.options.Verbose {
 		fmt.Println("Eval:", code)

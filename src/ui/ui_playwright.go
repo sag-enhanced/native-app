@@ -84,6 +84,15 @@ func (pwui *PlaywrightUII) Run() {
 	}
 }
 
+func (pwui *PlaywrightUII) Navigate(url string) {
+	if pwui.options.Verbose {
+		fmt.Println("Navigate:", url)
+	}
+	pwui.mainThread <- func() {
+		pwui.page.Goto(url)
+	}
+}
+
 func (pwui *PlaywrightUII) Eval(code string) {
 	if pwui.options.Verbose {
 		fmt.Println("Eval:", code)
