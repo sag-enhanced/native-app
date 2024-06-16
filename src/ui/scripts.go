@@ -15,7 +15,7 @@ func getScripts(options *options.Options) []string {
 	scripts = append(scripts, js)
 
 	// expose current URL
-	js = fmt.Sprintf("window.saged=window.saged||[];window.sage('setUrl',windwo.saged.push([()=>{},console.error.bind(console)]),JSON.stringify([location.href, %q]))", options.CurrentUrlSecret)
+	js = fmt.Sprintf("window.saged=window.saged||[];window.sage('setUrl',window.saged.push([()=>{},console.error.bind(console)]),JSON.stringify([location.href, %q]))", options.CurrentUrlSecret)
 	scripts = append(scripts, js)
 
 	// inject remotejs agent

@@ -5,12 +5,13 @@ import (
 
 	"github.com/sag-enhanced/native-app/src/bindings"
 	"github.com/sag-enhanced/native-app/src/file"
+	"github.com/sag-enhanced/native-app/src/helper"
 	"github.com/sag-enhanced/native-app/src/options"
 	"github.com/sag-enhanced/native-app/src/ui"
 )
 
 func Run(options *options.Options) {
-	os.MkdirAll(file.GetStoragePath(), 0755)
+	os.MkdirAll(helper.GetStoragePath(), 0755)
 
 	fm, err := file.NewFileManager()
 	if err != nil {

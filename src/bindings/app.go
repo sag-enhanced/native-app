@@ -29,6 +29,11 @@ func (b *Bindings) Info() (map[string]any, error) {
 		exeHash = hex.EncodeToString(digest[:])
 	}
 
+	url := ""
+	if currentUrl != nil {
+		url = currentUrl.String()
+	}
+
 	return map[string]any{
 		"build":    b.options.Build,
 		"path":     helper.GetStoragePath(),
@@ -39,7 +44,7 @@ func (b *Bindings) Info() (map[string]any, error) {
 		"args":     os.Args,
 		"exe":      exe,
 		"exe_hash": exeHash,
-		"url":      b.currentUrl.String(),
+		"url":      url,
 	}, nil
 }
 
