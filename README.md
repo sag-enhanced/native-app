@@ -17,9 +17,10 @@ build the app:
 go build
 ```
 
-> [!NOTE] If you are having issues building, you should run `git tag` and
-> checkout the latest tag. This will ensure that you are building the latest
-> version of the app which is known to work.
+> [!NOTE]  
+> If you are having issues building, you should run `git tag` and checkout the
+> latest tag. This will ensure that you are building the latest version of the
+> app which is known to work.
 
 You can also find pre-built binaries in the
 [releases](https://github.com/sag-enhanced/native-app/releases) section.
