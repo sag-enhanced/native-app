@@ -2,8 +2,6 @@ package helper
 
 import (
 	"crypto"
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -29,61 +27,11 @@ func (identity *Identity) Id() string {
 }
 
 func (identity *Identity) Seal(data []byte) ([]byte, error) {
-	key := make([]byte, 32)
-	if _, err := rand.Read(key); err != nil {
-		return nil, err
-	}
-	aesCipher, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	cipher, err := cipher.NewGCM(aesCipher)
-	if err != nil {
-		return nil, err
-	}
-	iv := make([]byte, cipher.NonceSize())
-	if _, err := rand.Read(iv); err != nil {
-		return nil, err
-	}
-
-	sealed := cipher.Seal(nil, iv, Pad(data, aes.BlockSize), nil)
-	sealedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &identity.PrivateKey.PublicKey, key, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]byte, len(iv)+len(sealedKey)+len(sealed))
-	copy(result, sealedKey)
-	copy(result[len(sealedKey):], iv)
-	copy(result[len(sealedKey)+len(iv):], sealed)
-
-	return result, nil
+	return RSASeal(&identity.PrivateKey.PublicKey, data)
 }
 
 func (identity *Identity) Unseal(data []byte) ([]byte, error) {
-	sealedKeyLen := 512
-	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, identity.PrivateKey, data[:sealedKeyLen], nil)
-	if err != nil {
-		return nil, err
-	}
-	aesCipher, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	cipher, err := cipher.NewGCM(aesCipher)
-	if err != nil {
-		return nil, err
-	}
-
-	iv := data[sealedKeyLen : sealedKeyLen+cipher.NonceSize()]
-	sealed := data[sealedKeyLen+cipher.NonceSize():]
-
-	plain, err := cipher.Open(nil, iv, sealed, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return Unpad(plain), nil
+	return RSAUnseal(identity.PrivateKey, data)
 }
 
 type fileManager interface {
