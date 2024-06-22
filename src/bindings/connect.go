@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
@@ -26,10 +27,8 @@ var clientSecret string
 // trust me, this is required to keep confidentiality in case of id.sage.party compromise
 var serverECIntentPublicKey = []byte{48, 89, 48, 19, 6, 7, 42, 134, 72, 206, 61, 2, 1, 6, 8, 42, 134, 72, 206, 61, 3, 1, 7, 3, 66, 0, 4, 217, 237, 95, 239, 38, 161, 158, 33, 241, 194, 181, 97, 179, 197, 202, 84, 167, 104, 239, 1, 199, 72, 252, 31, 50, 139, 245, 233, 28, 141, 138, 135, 95, 135, 252, 168, 38, 54, 127, 229, 60, 245, 77, 211, 192, 133, 193, 86, 170, 177, 100, 113, 34, 51, 32, 151, 208, 81, 28, 28, 213, 245, 103, 180}
 
-// const idProtocol = "https"
-// const idHostname = "id.sage.party"
-const idProtocol = "http"
-const idHostname = "localhost:3001"
+const idProtocol = "https"
+const idHostname = "id.sage.party"
 
 func (b *Bindings) InitConnect(handover string, resource string) error {
 	if identity == nil {
@@ -44,7 +43,7 @@ func (b *Bindings) InitConnect(handover string, resource string) error {
 	}
 
 	clientIntent = handover
-	clientSecret = base64.RawURLEncoding.EncodeToString(secret)
+	clientSecret = base64.RawStdEncoding.EncodeToString(secret)
 
 	query := url.Values{
 		"secret":   {clientSecret},
@@ -66,7 +65,7 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 		return "", fmt.Errorf("this binding must be called from %s", idHostname)
 	}
 	if secret != clientSecret || secret == "" {
-		return "", errors.New("Invalid intent")
+		return "", errors.New("Invalid secret")
 	}
 
 	intentPK, err := x509.ParsePKIXPublicKey(serverECIntentPublicKey)
@@ -85,6 +84,10 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 		return "", err
 	}
 
+	// get the thumbprint of the public key
+	der := x509.MarshalPKCS1PublicKey(&identity.PrivateKey.PublicKey)
+	digest := sha256.Sum256(der)
+
 	// we must make sure that we are approving the correct account
 	// the ID isnt that important here since its validated at the start, but why not
 	// (I currently dont see a security benefit to this, but it might be useful in the future)
@@ -92,7 +95,7 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 		Issuer:      "v4",
 		AnyAudience: jwt.Audience{"v4/connect/server-intent"},
 		ID:          clientSecret,
-		Subject:     clientSecret,
+		Subject:     base64.RawStdEncoding.EncodeToString(digest[:]),
 	}); err != nil {
 		return "", err
 	}
@@ -146,10 +149,10 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 			return "", err
 		}
 
-		sealed = base64.RawURLEncoding.EncodeToString(sealedData)
+		sealed = base64.RawStdEncoding.EncodeToString(sealedData)
 	}
 
-	challenge, err := base64.RawURLEncoding.DecodeString(serverIntent.Challenge)
+	challenge, err := base64.RawStdEncoding.DecodeString(serverIntent.Challenge)
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +167,7 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 		return "", err
 	}
 
-	return sealed + "." + base64.RawURLEncoding.EncodeToString(response), nil
+	return sealed + "." + base64.RawStdEncoding.EncodeToString(response), nil
 }
 
 func (b *Bindings) RecoverConnect(secret string, data string, password string) error {
@@ -173,10 +176,14 @@ func (b *Bindings) RecoverConnect(secret string, data string, password string) e
 	// be done somewhere else
 	if secret != clientSecret || secret == "" {
 		clientSecret = "" // prevent bruteforce and replay attacks
-		return errors.New("Invalid intent")
+		return errors.New("Invalid secret")
 	}
 
-	sealed, err := base64.RawURLEncoding.DecodeString(data)
+	if currentUrl == nil || currentUrl.Host != idHostname {
+		return fmt.Errorf("this binding must be called from %s", idHostname)
+	}
+
+	sealed, err := base64.RawStdEncoding.DecodeString(data)
 	if err != nil {
 		return err
 	}
