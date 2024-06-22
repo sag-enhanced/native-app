@@ -37,6 +37,9 @@ func (wui *WebviewUII) Run() {
 }
 
 func (wui *WebviewUII) Navigate(url string) {
+	if wui.options.Verbose {
+		fmt.Println("Navigate:", url)
+	}
 	wui.webview.Dispatch(func() {
 		wui.webview.Navigate(url)
 	})
