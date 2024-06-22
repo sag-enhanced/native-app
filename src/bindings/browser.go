@@ -84,5 +84,5 @@ func (b *Bindings) BrowserDestroy(handle string) {
 }
 
 func (b *Bindings) BrowserDestroyProfile(browser string) error {
-	return helper.DestroyBrowserProfile(browser)
+	return helper.DestroyBrowserProfile(b.options, browser)
 }

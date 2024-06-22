@@ -16,6 +16,7 @@ func main() {
 	var openCommand string
 	var buildOverride int
 	var loopbackPort int
+	flag.StringVar(&opt.DataDirectory, "data", opt.DataDirectory, "Data directory to use")
 	flag.StringVar(&opt.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
 	flag.StringVar(&opt.Realm, "realm", options.StableRealm, "Run the app in the specified realm")
 	flag.BoolVar(&opt.Verbose, "verbose", false, "Enable VERY verbose logging")
@@ -23,7 +24,7 @@ func main() {
 	flag.StringVar(&opt.UI, "ui", opt.UI, "UI to use (webview or playwright)")
 	flag.BoolVar(&opt.SteamDev, "steamdev", false, "Enable Steam Dev mode")
 	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
-	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d)", opt.LoopbackPort))
+	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d) (NOT RECOMMENDED)", opt.LoopbackPort))
 	flag.Parse()
 
 	if openCommand != "" {
@@ -34,6 +35,7 @@ func main() {
 		opt.Build = uint32(buildOverride)
 	}
 	if loopbackPort != -1 {
+		fmt.Println("WARNING: Loopback port override is not recommended and may cause issues.")
 		opt.LoopbackPort = uint16(loopbackPort)
 	}
 	if opt.Realm != options.StableRealm {

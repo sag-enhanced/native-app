@@ -10,6 +10,8 @@ import (
 	"errors"
 	"os"
 	"path"
+
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
 type Identity struct {
@@ -39,12 +41,12 @@ type fileManager interface {
 	WriteFile(name string, data []byte, dontEncrypt bool) error
 }
 
-func LoadIdentity(fm fileManager) (*Identity, error) {
-	idFileNew := path.Join(GetStoragePath(), "sage2.id")
+func LoadIdentity(fm fileManager, options *options.Options) (*Identity, error) {
+	idFileNew := path.Join(options.DataDirectory, "sage2.id")
 	data, err := fm.ReadFile(idFileNew)
 	if err != nil {
 		// migration for old id file (pre b7)
-		idFileOld := path.Join(GetStoragePath(), "sage.id")
+		idFileOld := path.Join(options.DataDirectory, "sage.id")
 		data, err = os.ReadFile(idFileOld)
 		if err == nil {
 			err = fm.WriteFile(idFileNew, data, false)

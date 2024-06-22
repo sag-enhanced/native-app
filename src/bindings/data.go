@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 	"path"
-
-	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 func (b *Bindings) Get(key string) (string, error) {
@@ -20,7 +18,7 @@ func (b *Bindings) Get(key string) (string, error) {
 	fmt.Println("Failed to read new file", filenameNew, err)
 
 	// fallback to old file (pre b7)
-	filenameOld := path.Join(helper.GetStoragePath(), key+".dat")
+	filenameOld := path.Join(b.options.DataDirectory, key+".dat")
 	data, err = os.ReadFile(filenameOld)
 	if err != nil {
 		return "", err

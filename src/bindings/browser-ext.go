@@ -12,11 +12,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/sag-enhanced/native-app/src/helper"
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
 func (b *Bindings) Ext(browser string) (*map[string]string, error) {
-	dir := path.Join(helper.GetStoragePath(), "ext", browser)
+	dir := path.Join(b.options.DataDirectory, "ext", browser)
 	extensions := map[string]string{}
 	files, err := os.ReadDir(dir)
 	// probably directory doesnt exist, so no extensions
@@ -52,7 +52,7 @@ func (b *Bindings) ExtInstall(name string, browser string, download string) erro
 		return errors.New("invalid extension name")
 	}
 
-	installExtensionFromGithub(name, browser, download)
+	installExtensionFromGithub(name, browser, download, b.options)
 
 	return nil
 }
@@ -62,7 +62,7 @@ func (b *Bindings) ExtGetManifest(name string, browser string) (string, error) {
 		return "", errors.New("invalid extension name")
 	}
 
-	manifest := path.Join(helper.GetStoragePath(), "ext", browser, name, "manifest.json")
+	manifest := path.Join(b.options.DataDirectory, "ext", browser, name, "manifest.json")
 
 	data, err := os.ReadFile(manifest)
 	if err != nil {
@@ -76,7 +76,7 @@ func (b *Bindings) ExtSetManifest(name string, browser string, manifest string) 
 		return errors.New("invalid extension name")
 	}
 
-	manifestPath := path.Join(helper.GetStoragePath(), "ext", browser, name, "manifest.json")
+	manifestPath := path.Join(b.options.DataDirectory, "ext", browser, name, "manifest.json")
 	return os.WriteFile(manifestPath, []byte(manifest), 0644)
 }
 
@@ -85,7 +85,7 @@ func (b *Bindings) ExtUninstall(name string, browser string) error {
 		return errors.New("invalid extension name")
 	}
 
-	dir := path.Join(helper.GetStoragePath(), "ext", browser, name)
+	dir := path.Join(b.options.DataDirectory, "ext", browser, name)
 	return os.RemoveAll(dir)
 }
 
@@ -93,7 +93,7 @@ type Manifest struct {
 	Version string `json:"version"`
 }
 
-func installExtensionFromGithub(name string, browser string, download string) error {
+func installExtensionFromGithub(name string, browser string, download string, options *options.Options) error {
 	resp, err := http.Get(download)
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func installExtensionFromGithub(name string, browser string, download string) er
 		return fmt.Errorf("HTTP request returned %d", resp.StatusCode)
 	}
 
-	dir := path.Join(helper.GetStoragePath(), "ext", browser, name)
+	dir := path.Join(options.DataDirectory, "ext", browser, name)
 
 	os.MkdirAll(dir, 0755)
 

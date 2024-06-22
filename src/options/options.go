@@ -15,6 +15,7 @@ type Options struct {
 	RemotejsSession string
 	UI              UI
 	SteamDev        bool
+	DataDirectory   string
 
 	CurrentUrlSecret string
 }
@@ -27,8 +28,9 @@ func NewOptions() *Options {
 		Build:        8,
 		LoopbackPort: 8666,
 
-		UI:          GetPreferredUI(),
-		OpenCommand: GetDefaultOpenCommand(),
+		UI:            GetPreferredUI(),
+		OpenCommand:   GetDefaultOpenCommand(),
+		DataDirectory: GetDefaultStoragePath(),
 
 		CurrentUrlSecret: base64.RawURLEncoding.EncodeToString(secret),
 	}

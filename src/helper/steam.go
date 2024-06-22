@@ -16,8 +16,7 @@ import (
 // looking where the steam executable is from currently running processes
 // seemed like the most reliable way to find it on all platforms
 func FindSteamExecutable(options *options.Options) (string, error) {
-	storagePath := GetStoragePath()
-	cache := filepath.Join(storagePath, "steam_executable.txt")
+	cache := filepath.Join(options.DataDirectory, "steam_executable.txt")
 	if _, err := os.Stat(cache); err == nil {
 		data, err := os.ReadFile(cache)
 		if err != nil {

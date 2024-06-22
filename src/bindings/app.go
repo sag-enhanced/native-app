@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/denisbrodbeck/machineid"
-	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 var start = time.Now().UnixMilli()
@@ -36,7 +35,7 @@ func (b *Bindings) Info() (map[string]any, error) {
 
 	return map[string]any{
 		"build":    b.options.Build,
-		"path":     helper.GetStoragePath(),
+		"path":     b.options.DataDirectory,
 		"os":       runtime.GOOS,
 		"arch":     runtime.GOARCH,
 		"id":       id,

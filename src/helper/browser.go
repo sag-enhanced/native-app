@@ -49,7 +49,7 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 		}
 	}
 
-	profilePath := path.Join(GetStoragePath(), "profiles", browser, fmt.Sprintf("%d", profileId))
+	profilePath := path.Join(options.DataDirectory, "profiles", browser, fmt.Sprintf("%d", profileId))
 
 	devtoolsPortFile := path.Join(profilePath, "DevToolsActivePort")
 	os.Remove(devtoolsPortFile)
@@ -66,7 +66,7 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 		args = append(args, fmt.Sprintf("--proxy-server=%s://%s", proxy.Scheme, proxy.Host))
 	}
 
-	if extensions, err := getExtensionList(browser); err == nil {
+	if extensions, err := getExtensionList(options, browser); err == nil {
 		for _, ext := range extensions {
 			args = append(args, "--load-extension="+ext)
 		}
@@ -179,13 +179,13 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 	return nil
 }
 
-func DestroyBrowserProfile(browser string) error {
-	profilePath := path.Join(GetStoragePath(), "profiles", browser)
+func DestroyBrowserProfile(options *options.Options, browser string) error {
+	profilePath := path.Join(options.DataDirectory, "profiles", browser)
 	return os.RemoveAll(profilePath)
 }
 
-func getExtensionList(browser string) ([]string, error) {
-	ext := path.Join(GetStoragePath(), "ext", browser)
+func getExtensionList(options *options.Options, browser string) ([]string, error) {
+	ext := path.Join(options.DataDirectory, "ext", browser)
 	files, err := os.ReadDir(ext)
 	extensions := []string{}
 	if err != nil {

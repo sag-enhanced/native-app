@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/sag-enhanced/native-app/src/helper"
+	"github.com/sag-enhanced/native-app/src/options"
 )
 
 type FileHeader byte
@@ -29,11 +30,12 @@ const (
 type FileManager struct {
 	Manifest *EncryptionManifest
 	Cipher   *cipher.Block
+	Options  *options.Options
 }
 
-func NewFileManager() (*FileManager, error) {
+func NewFileManager(options *options.Options) (*FileManager, error) {
 	fm := &FileManager{}
-	manifestPath := path.Join(helper.GetStoragePath(), "manifest.json")
+	manifestPath := path.Join(options.DataDirectory, "manifest.json")
 	manifestContent, err := os.ReadFile(manifestPath)
 	if err == nil {
 		var manifest EncryptionManifest
@@ -113,15 +115,15 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 	errors := []error{}
 	fileNames := []string{}
-	if files, err := os.ReadDir(path.Join(helper.GetStoragePath(), "data")); err == nil {
+	if files, err := os.ReadDir(path.Join(fm.Options.DataDirectory, "data")); err == nil {
 		for _, file := range files {
-			fileNames = append(fileNames, path.Join(helper.GetStoragePath(), "data", file.Name()))
+			fileNames = append(fileNames, path.Join(fm.Options.DataDirectory, "data", file.Name()))
 		}
 	}
-	if files, err := os.ReadDir(helper.GetStoragePath()); err == nil {
+	if files, err := os.ReadDir(fm.Options.DataDirectory); err == nil {
 		for _, file := range files {
 			if !file.IsDir() && strings.HasSuffix(file.Name(), ".id") {
-				fileNames = append(fileNames, path.Join(helper.GetStoragePath(), file.Name()))
+				fileNames = append(fileNames, path.Join(fm.Options.DataDirectory, file.Name()))
 			}
 		}
 	}
@@ -140,7 +142,7 @@ func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
 }
 
 func (fm *FileManager) GetFilename(name string) string {
-	return path.Join(helper.GetStoragePath(), "data", name+".dat")
+	return path.Join(fm.Options.DataDirectory, "data", name+".dat")
 }
 
 func (fm *FileManager) TryLoadKey(password string) error {
@@ -216,7 +218,7 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 		Keys:    keys,
 	}
 
-	manifestPath := path.Join(helper.GetStoragePath(), "manifest.json")
+	manifestPath := path.Join(fm.Options.DataDirectory, "manifest.json")
 	data, err := json.Marshal(manifest)
 	if err != nil {
 		return err

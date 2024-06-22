@@ -7,12 +7,10 @@ import (
 	"path"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/sag-enhanced/native-app/src/helper"
 )
 
 func (b *Bindings) FsReadFile(filename string) (string, error) {
-	path, err := validateFilename(filename)
+	path, err := b.fsValidateFilename(filename)
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +27,7 @@ func (b *Bindings) FsReadFile(filename string) (string, error) {
 }
 
 func (b *Bindings) FsWriteFile(filename string, content string) error {
-	path, err := validateFilename(filename)
+	path, err := b.fsValidateFilename(filename)
 	if err != nil {
 		return err
 	}
@@ -46,7 +44,7 @@ func (b *Bindings) FsWriteFile(filename string, content string) error {
 }
 
 func (b *Bindings) FsDeleteFile(filename string) error {
-	path, err := validateFilename(filename)
+	path, err := b.fsValidateFilename(filename)
 	if err != nil {
 		return err
 	}
@@ -55,7 +53,7 @@ func (b *Bindings) FsDeleteFile(filename string) error {
 }
 
 func (b *Bindings) FsListFiles(dirname string) ([]string, error) {
-	path, err := validateFilename(dirname)
+	path, err := b.fsValidateFilename(dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +71,7 @@ func (b *Bindings) FsListFiles(dirname string) ([]string, error) {
 }
 
 func (b *Bindings) FsMkdir(dirname string) error {
-	path, err := validateFilename(dirname)
+	path, err := b.fsValidateFilename(dirname)
 	if err != nil {
 		return err
 	}
@@ -81,14 +79,14 @@ func (b *Bindings) FsMkdir(dirname string) error {
 	return os.MkdirAll(path, 0755)
 }
 
-func validateFilename(filename string) (string, error) {
+func (b *Bindings) fsValidateFilename(filename string) (string, error) {
 	cleaned := path.Clean(strings.ReplaceAll(filename, "\\", "/"))
 	if cleaned != filename {
 		return "", errors.New("Invalid filename")
 	}
 
-	realName := path.Clean(path.Join(helper.GetStoragePath(), "files", filename))
-	if !strings.HasPrefix(realName, helper.GetStoragePath()) {
+	realName := path.Clean(path.Join(b.options.DataDirectory, "files", filename))
+	if !strings.HasPrefix(realName, b.options.DataDirectory) {
 		return "", errors.New("Invalid filename")
 	}
 	return realName, nil
