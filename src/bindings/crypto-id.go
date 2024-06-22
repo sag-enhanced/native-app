@@ -19,28 +19,37 @@ func (b *Bindings) Id() (string, error) {
 }
 
 // TODO: remove in b10 (login will be disabled in 2025)
-func (b *Bindings) Sign(message string) ([]byte, error) {
+func (b *Bindings) Sign(message string) (string, error) {
 	id, err := getIdentity(b.fm)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return id.Sign([]byte(message))
+	signature, err := id.Sign([]byte(message))
+	if err != nil {
+		return "", err
+	}
+	return base64.RawStdEncoding.EncodeToString(signature), nil
 }
 
-func (b *Bindings) Sign2(message string) ([]byte, error) {
+func (b *Bindings) Sign2(message string) (string, error) {
 	id, err := getIdentity(b.fm)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	decoded, err := base64.RawStdEncoding.DecodeString(message)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	// 0x0001 is header for signature requests
 	if len(decoded) < 2 || decoded[0] != 0x00 || decoded[1] != 0x01 {
-		return nil, errors.New("Invalid message")
+		return "", errors.New("Invalid message")
 	}
-	return id.Sign(decoded)
+	signature, err := id.Sign(decoded)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawStdEncoding.EncodeToString(signature), nil
 }
 
 func (b *Bindings) Seal(data string) (string, error) {
