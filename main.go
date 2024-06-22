@@ -23,6 +23,7 @@ func main() {
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
 	flag.StringVar(&opt.UI, "ui", opt.UI, "UI to use (webview or playwright)")
 	flag.BoolVar(&opt.SteamDev, "steamdev", false, "Enable Steam Dev mode")
+	flag.BoolVar(&opt.NoCompress, "nocompress", false, "Disable file compression")
 	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
 	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d) (NOT RECOMMENDED)", opt.LoopbackPort))
 	flag.Parse()

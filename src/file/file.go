@@ -244,7 +244,7 @@ func (fm *FileManager) CreateKey(passwords []string) error {
 
 func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 	data = append([]byte{byte(FileHeaderRaw)}, data...)
-	data, err := tryCompress(data)
+	data, err := fm.tryCompress(data)
 	if err != nil {
 		return nil, err
 	}
@@ -263,14 +263,18 @@ func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 		copy(data[1:], nonce)
 		copy(data[1+len(nonce):], encrypted)
 	}
-	data, err = tryCompress(data)
+	data, err = fm.tryCompress(data)
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func tryCompress(data []byte) ([]byte, error) {
+func (fm *FileManager) tryCompress(data []byte) ([]byte, error) {
+	// compression was disabled
+	if fm.Options.NoCompress {
+		return data, nil
+	}
 	var buf bytes.Buffer
 	buf.Write([]byte{byte(FileHeaderCompressed)})
 	writer, err := flate.NewWriter(&buf, flate.BestCompression)

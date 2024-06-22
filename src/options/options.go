@@ -16,6 +16,7 @@ type Options struct {
 	UI              UI
 	SteamDev        bool
 	DataDirectory   string
+	NoCompress      bool
 
 	CurrentUrlSecret string
 }
