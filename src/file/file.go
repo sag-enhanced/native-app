@@ -22,9 +22,10 @@ import (
 type FileHeader byte
 
 const (
-	FileHeaderRaw        FileHeader = 0x0
-	FileHeaderEncrypted  FileHeader = 0x1
-	FileHeaderCompressed FileHeader = 0x2
+	FileHeaderRaw            FileHeader = 0x0
+	FileHeaderEncrypted      FileHeader = 0x1
+	FileHeaderCompressed     FileHeader = 0x2
+	FileHeaderEncryptedNoPad FileHeader = 0x3
 )
 
 type FileManager struct {
@@ -73,7 +74,7 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 	header := FileHeader(data[0])
 	if header == FileHeaderRaw {
 		return data[1:], nil
-	} else if header == FileHeaderEncrypted {
+	} else if header == FileHeaderEncrypted || header == FileHeaderEncryptedNoPad {
 		if fm.Cipher == nil {
 			return nil, errors.New("encrypted")
 		}
@@ -86,6 +87,11 @@ func (fm *FileManager) unpack(data []byte) ([]byte, error) {
 			return nil, err
 		}
 
+		if header == FileHeaderEncryptedNoPad {
+			return fm.unpack(content)
+		}
+		// GCM does not need padding, but due to an historical false judgement, we still padded it
+		// FileHeaderEncrypted is legacy and will not be created anymore
 		return fm.unpack(helper.Unpad(content))
 	} else if header == FileHeaderCompressed {
 		reader := flate.NewReader(bytes.NewReader(data[1:]))
@@ -251,9 +257,9 @@ func (fm *FileManager) pack(data []byte, ignoreCipher bool) ([]byte, error) {
 		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 			return nil, err
 		}
-		encrypted := aesCipher.Seal(nil, nonce, helper.Pad(data, aes.BlockSize), nil)
+		encrypted := aesCipher.Seal(nil, nonce, data, nil)
 		data = make([]byte, 1+len(nonce)+len(encrypted))
-		data[0] = byte(FileHeaderEncrypted)
+		data[0] = byte(FileHeaderEncryptedNoPad)
 		copy(data[1:], nonce)
 		copy(data[1+len(nonce):], encrypted)
 	}
