@@ -53,7 +53,7 @@ func RSASeal(publicKey *rsa.PublicKey, data []byte) ([]byte, error) {
 }
 
 func RSAUnseal(privateKey *rsa.PrivateKey, data []byte) ([]byte, error) {
-	sealedKeyLen := 512
+	sealedKeyLen := privateKey.PublicKey.Size()
 	key, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, privateKey, data[:sealedKeyLen], nil)
 	if err != nil {
 		return nil, err
