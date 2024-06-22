@@ -59,15 +59,15 @@ func (pwui *PlaywrightUII) Run() {
 	}
 	defer pwui.page.Close()
 
+	pwui.mainThread = make(chan func())
+	pwui.initBinding()
+
 	scripts := getScripts(pwui.options)
 	for _, script := range scripts {
 		pwui.page.AddInitScript(playwright.Script{
 			Content: playwright.String(script),
 		})
 	}
-
-	pwui.mainThread = make(chan func())
-	pwui.initBinding()
 
 	pwui.page.OnClose(func(_ playwright.Page) {
 		// this will wake-up the main thread which will then realize its time to exit
@@ -119,7 +119,7 @@ func (pwui *PlaywrightUII) initBinding() {
 		}
 
 		callerOrigin := fmt.Sprintf("%s://%s", caller.Scheme, caller.Host)
-		if callerOrigin != pwui.options.GetRealmOrigin() {
+		if callerOrigin != pwui.options.GetRealmOrigin() && callerOrigin != "https://id.sage.party" {
 			return fmt.Errorf("sage() is not allowed to be called from %q", callerOrigin)
 		}
 
