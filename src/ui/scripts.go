@@ -11,7 +11,7 @@ func getScripts(options *options.Options) []string {
 
 	// arbitrary redirect protection
 	origin := options.GetRealmOrigin()
-	js := fmt.Sprintf("if([%q, 'id.sage.party'].indexOf(location.origin)===-1)location.href=%q", origin, origin)
+	js := fmt.Sprintf("if([%q,'https://id.sage.party'].indexOf(location.origin)===-1)location.href=%q", origin, origin)
 	scripts = append(scripts, js)
 
 	// expose current URL
