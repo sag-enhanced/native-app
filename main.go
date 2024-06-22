@@ -36,6 +36,9 @@ func main() {
 	if loopbackPort != -1 {
 		opt.LoopbackPort = uint16(loopbackPort)
 	}
+	if opt.Realm != options.StableRealm {
+		fmt.Println("WARNING: Using experimental realm. This may cause issues.")
+	}
 
 	if opt.RemotejsSession != "" {
 		var allow string
