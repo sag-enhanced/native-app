@@ -6,11 +6,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/sag-enhanced/native-app/src/helper"
+	"github.com/sag-enhanced/native-app/src/steam"
 )
 
 func (b *Bindings) SteamPatch(js string) error {
-	exe, err := helper.FindSteamExecutable(b.options)
+	exe, err := steam.FindSteamExecutable(b.options)
 	if err != nil {
 		return err
 	}
@@ -19,7 +19,7 @@ func (b *Bindings) SteamPatch(js string) error {
 		fmt.Println("Steam executable found at", exe)
 	}
 
-	data, err := helper.FindSteamDataDir(b.options)
+	data, err := steam.FindSteamDataDir(b.options)
 	if err != nil {
 		return err
 	}
@@ -43,12 +43,12 @@ func (b *Bindings) SteamPatch(js string) error {
 }
 
 func (b *Bindings) SteamRun() error {
-	helper.CloseSteam(b.options)
+	steam.CloseSteam(b.options)
 
 	if b.options.Verbose {
 		fmt.Println("Starting Steam with injected code...")
 	}
 	// -noverifyfiles is required to prevent steam from checking the files
 	// and redownloading them if they are modified
-	return helper.RunSteamWithArguments(b.options, "-noverifyfiles")
+	return steam.RunSteamWithArguments(b.options, "-noverifyfiles")
 }

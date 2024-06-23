@@ -5,10 +5,10 @@ import (
 	"errors"
 
 	"github.com/sag-enhanced/native-app/src/file"
-	"github.com/sag-enhanced/native-app/src/helper"
+	id "github.com/sag-enhanced/native-app/src/identity"
 )
 
-var identity *helper.Identity
+var identity *id.Identity
 
 func (b *Bindings) Id() (string, error) {
 	id, err := getIdentity(b.fm)
@@ -20,11 +20,11 @@ func (b *Bindings) Id() (string, error) {
 
 // TODO: remove in b10 (login will be disabled in 2025)
 func (b *Bindings) Sign(message string) (string, error) {
-	id, err := getIdentity(b.fm)
+	identity, err := getIdentity(b.fm)
 	if err != nil {
 		return "", err
 	}
-	signature, err := id.Sign([]byte(message))
+	signature, err := identity.Sign([]byte(message))
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +32,7 @@ func (b *Bindings) Sign(message string) (string, error) {
 }
 
 func (b *Bindings) Sign2(message string) (string, error) {
-	id, err := getIdentity(b.fm)
+	identity, err := getIdentity(b.fm)
 	if err != nil {
 		return "", err
 	}
@@ -44,7 +44,7 @@ func (b *Bindings) Sign2(message string) (string, error) {
 	if len(decoded) < 2 || decoded[0] != 0x00 || decoded[1] != 0x01 {
 		return "", errors.New("Invalid message")
 	}
-	signature, err := id.Sign(decoded)
+	signature, err := identity.Sign(decoded)
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +53,7 @@ func (b *Bindings) Sign2(message string) (string, error) {
 }
 
 func (b *Bindings) Seal(data string) (string, error) {
-	id, err := getIdentity(b.fm)
+	identity, err := getIdentity(b.fm)
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +61,7 @@ func (b *Bindings) Seal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sealed, err := id.Seal(plaintext)
+	sealed, err := identity.Seal(plaintext)
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +69,7 @@ func (b *Bindings) Seal(data string) (string, error) {
 }
 
 func (b *Bindings) Unseal(data string) (string, error) {
-	id, err := getIdentity(b.fm)
+	identity, err := getIdentity(b.fm)
 	if err != nil {
 		return "", err
 	}
@@ -77,16 +77,16 @@ func (b *Bindings) Unseal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	unsealed, err := id.Unseal(decoded)
+	unsealed, err := identity.Unseal(decoded)
 	if err != nil {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(unsealed), nil
 
 }
-func getIdentity(fm *file.FileManager) (*helper.Identity, error) {
+func getIdentity(fm *file.FileManager) (*id.Identity, error) {
 	if identity == nil {
-		id, err := helper.LoadIdentity(fm, fm.Options)
+		id, err := id.LoadIdentity(fm, fm.Options)
 		if err != nil {
 			return nil, err
 		}

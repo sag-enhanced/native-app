@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
+	"path"
 	"sync"
 	"time"
 
-	"github.com/sag-enhanced/native-app/src/helper"
+	browserAPI "github.com/sag-enhanced/native-app/src/browser"
 )
 
-var browserHandles = map[string]*helper.BrowserChannels{}
+var browserHandles = map[string]*browserAPI.BrowserChannels{}
 var browserHandleLock = sync.Mutex{}
 
 func (b *Bindings) BrowserNew(pageUrl string, code string, browser string, proxy *string, profileId int32) (string, error) {
@@ -32,12 +34,12 @@ func (b *Bindings) BrowserNew(pageUrl string, code string, browser string, proxy
 		}
 	}
 
-	channels := &helper.BrowserChannels{
+	channels := &browserAPI.BrowserChannels{
 		Result: make(chan string, 5),
 		Stop:   make(chan string, 5),
 	}
 	go func() {
-		err := helper.RunBrowser(channels, b.options, pageUrl, code, browser, parsedProxy, profileId)
+		err := browserAPI.RunBrowser(channels, b.options, pageUrl, code, browser, parsedProxy, profileId)
 		if err != nil {
 			fmt.Println("Error running browser:", err)
 		}
@@ -84,5 +86,6 @@ func (b *Bindings) BrowserDestroy(handle string) {
 }
 
 func (b *Bindings) BrowserDestroyProfile(browser string) error {
-	return helper.DestroyBrowserProfile(b.options, browser)
+	profilePath := path.Join(b.options.DataDirectory, "profiles", browser)
+	return os.RemoveAll(profilePath)
 }

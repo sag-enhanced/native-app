@@ -1,4 +1,4 @@
-package helper
+package identity
 
 import (
 	"crypto"
@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/sag-enhanced/native-app/src/helper"
 	"github.com/sag-enhanced/native-app/src/options"
 )
 
@@ -29,11 +30,11 @@ func (identity *Identity) Id() string {
 }
 
 func (identity *Identity) Seal(data []byte) ([]byte, error) {
-	return RSASeal(&identity.PrivateKey.PublicKey, data)
+	return helper.RSASeal(&identity.PrivateKey.PublicKey, data)
 }
 
 func (identity *Identity) Unseal(data []byte) ([]byte, error) {
-	return RSAUnseal(identity.PrivateKey, data)
+	return helper.RSAUnseal(identity.PrivateKey, data)
 }
 
 type fileManager interface {
