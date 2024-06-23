@@ -7,6 +7,7 @@ import (
 
 type Options struct {
 	Build        uint32
+	Release      uint32
 	LoopbackPort uint16
 
 	Verbose         bool
@@ -27,6 +28,7 @@ func NewOptions() *Options {
 
 	return &Options{
 		Build:        8,
+		Release:      0,
 		LoopbackPort: 8666,
 
 		UI:            GetPreferredUI(),

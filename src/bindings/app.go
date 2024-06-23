@@ -35,6 +35,7 @@ func (b *Bindings) Info() (map[string]any, error) {
 
 	return map[string]any{
 		"build":    b.options.Build,
+		"release":  b.options.Release,
 		"path":     b.options.DataDirectory,
 		"os":       runtime.GOOS,
 		"arch":     runtime.GOARCH,

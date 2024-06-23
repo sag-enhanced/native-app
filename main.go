@@ -15,6 +15,7 @@ func main() {
 	opt := options.NewOptions()
 	var openCommand string
 	var buildOverride int
+	var releaseOverride int
 	var loopbackPort int
 	flag.StringVar(&opt.DataDirectory, "data", opt.DataDirectory, "Data directory to use")
 	flag.StringVar(&opt.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
@@ -25,6 +26,7 @@ func main() {
 	flag.BoolVar(&opt.SteamDev, "steamdev", false, "Enable Steam Dev mode")
 	flag.BoolVar(&opt.NoCompress, "nocompress", false, "Disable file compression")
 	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
+	flag.IntVar(&releaseOverride, "release", -1, "Override/spoof release number (NOT RECOMMENDED)")
 	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d) (NOT RECOMMENDED)", opt.LoopbackPort))
 	flag.Parse()
 
@@ -34,6 +36,10 @@ func main() {
 	if buildOverride != -1 {
 		fmt.Println("WARNING: Build number override is not recommended and may cause issues.")
 		opt.Build = uint32(buildOverride)
+	}
+	if releaseOverride != -1 {
+		fmt.Println("WARNING: Release number override is not recommended and may cause issues.")
+		opt.Release = uint32(releaseOverride)
 	}
 	if loopbackPort != -1 {
 		fmt.Println("WARNING: Loopback port override is not recommended and may cause issues.")
