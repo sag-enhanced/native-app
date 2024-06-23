@@ -11,8 +11,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/sag-enhanced/native-app/src/file"
 	"github.com/sag-enhanced/native-app/src/helper"
-	"github.com/sag-enhanced/native-app/src/options"
 )
 
 type Identity struct {
@@ -37,17 +37,12 @@ func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 	return helper.RSAUnseal(identity.PrivateKey, data)
 }
 
-type fileManager interface {
-	ReadFile(name string) ([]byte, error)
-	WriteFile(name string, data []byte, dontEncrypt bool) error
-}
-
-func LoadIdentity(fm fileManager, options *options.Options) (*Identity, error) {
-	idFileNew := path.Join(options.DataDirectory, "sage2.id")
+func LoadIdentity(fm *file.FileManager) (*Identity, error) {
+	idFileNew := path.Join(fm.Options.DataDirectory, "sage2.id")
 	data, err := fm.ReadFile(idFileNew)
 	if err != nil {
 		// migration for old id file (pre b7)
-		idFileOld := path.Join(options.DataDirectory, "sage.id")
+		idFileOld := path.Join(fm.Options.DataDirectory, "sage.id")
 		data, err = os.ReadFile(idFileOld)
 		if err == nil {
 			err = fm.WriteFile(idFileNew, data, false)

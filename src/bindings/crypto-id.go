@@ -86,7 +86,7 @@ func (b *Bindings) Unseal(data string) (string, error) {
 }
 func getIdentity(fm *file.FileManager) (*id.Identity, error) {
 	if identity == nil {
-		id, err := id.LoadIdentity(fm, fm.Options)
+		id, err := id.LoadIdentity(fm)
 		if err != nil {
 			return nil, err
 		}
