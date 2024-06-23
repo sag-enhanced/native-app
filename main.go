@@ -63,7 +63,9 @@ func main() {
 
 	start := time.Now()
 
-	app.Run(opt)
+	if err := app.Run(opt); err != nil {
+		fmt.Println(err)
+	}
 
 	elapsed := time.Since(start)
 	if elapsed.Seconds() < 2 {
@@ -71,7 +73,7 @@ func main() {
 		if runtime.GOOS == "windows" {
 			fmt.Println("Windows 10 users need to install the following program:")
 			fmt.Println("https://developer.microsoft.com/en-us/microsoft-edge/webview2/")
+			fmt.Scanln()
 		}
-		fmt.Scanln()
 	}
 }

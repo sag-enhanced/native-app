@@ -9,16 +9,17 @@ import (
 	"github.com/sag-enhanced/native-app/src/ui"
 )
 
-func Run(options *options.Options) {
+func Run(options *options.Options) error {
 	os.MkdirAll(options.DataDirectory, 0755)
 
 	fm, err := file.NewFileManager(options)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	ui := ui.NewUI(options)
 
 	bindings := bindings.NewBindings(options, ui, fm)
 	ui.SetBindHandler(bindings.BindHandler)
 	ui.Run()
+	return nil
 }
