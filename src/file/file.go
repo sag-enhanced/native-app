@@ -35,7 +35,9 @@ type FileManager struct {
 }
 
 func NewFileManager(options *options.Options) (*FileManager, error) {
-	fm := &FileManager{}
+	fm := &FileManager{
+		Options: options,
+	}
 	manifestPath := path.Join(options.DataDirectory, "manifest.json")
 	manifestContent, err := os.ReadFile(manifestPath)
 	if err == nil {
