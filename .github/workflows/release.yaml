@@ -58,13 +58,20 @@ jobs:
 
   darwin:
     name: Release Darwin Binary
-    runs-on: macos-latest
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
       - name: Build
         run: |
           go build -ldflags="-s -w" -o bin/sage-darwin-amd64 -tags CI .
+      - name: Package
+        run: |
+          mkdir -p SAGE.app/Contents/MacOS SAGE.app/Contents/Resources
+          cp bin/sage-darwin-amd64 SAGE.app/Contents/MacOS/SAGE
+          cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
+          cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
+          zip -r bin/sage-darwin-amd64.App.zip SAGE.app
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -89,6 +96,13 @@ jobs:
       - name: Build
         run: |
           go build -ldflags="-s -w" -o bin/sage-darwin-arm64 .
+      - name: Package
+        run: |
+          mkdir -p SAGE.app/Contents/MacOS SAGE.app/Contents/Resources
+          cp bin/sage-darwin-arm64 SAGE.app/Contents/MacOS/SAGE
+          cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
+          cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
+          zip -r bin/sage-darwin-arm64.App.zip SAGE.app
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
