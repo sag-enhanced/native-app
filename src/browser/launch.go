@@ -44,7 +44,7 @@ func launchBrowser(exe string, args []string) (*os.Process, error) {
 	return cmd.Process, nil
 }
 
-func waitForDevToolsActivePort(profile string) (int16, error) {
+func waitForDevToolsActivePort(profile string) (int, error) {
 	devtoolsPortFile := path.Join(profile, "DevToolsActivePort")
 	for i := 0; i < 100; i++ {
 		if _, err := os.Stat(devtoolsPortFile); err == nil {
@@ -57,9 +57,9 @@ func waitForDevToolsActivePort(profile string) (int16, error) {
 		return 0, err
 	}
 
-	port, err := strconv.Atoi(strings.TrimSpace(string(content)))
+	port, err := strconv.Atoi(strings.Split(string(content), "\n")[0])
 	if err != nil {
 		return 0, err
 	}
-	return int16(port), nil
+	return port, nil
 }

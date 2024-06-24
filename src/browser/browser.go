@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -26,6 +27,9 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 	if err != nil {
 		return err
 	}
+
+	devtoolsPortFile := path.Join(profile, "DevToolsActivePort")
+	os.Remove(devtoolsPortFile)
 
 	if options.Verbose {
 		fmt.Println("Running browser with args", exe, args)
