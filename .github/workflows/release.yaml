@@ -57,37 +57,16 @@ jobs:
           file_glob: true
 
   darwin:
-    name: Release Darwin Binary
-    runs-on: macos-12
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - name: Build
-        run: |
-          go build -ldflags="-s -w" -o bin/sage-darwin-amd64 -tags CI .
-      - name: Package
-        run: |
-          mkdir -p SAGE.app/Contents/MacOS SAGE.app/Contents/Resources
-          cp bin/sage-darwin-amd64 SAGE.app/Contents/MacOS/SAGE
-          cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
-          cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
-          zip -r bin/sage-darwin-amd64.App.zip SAGE.app
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: sage-darwin-amd64
-          path: ./bin/sage-darwin-*
-          if-no-files-found: error
-      - if: github.event_name == 'release'
-        name: Upload assets to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file: ./bin/sage-darwin-*
-          file_glob: true
+    strategy:
+      matrix:
+        include:
+          - runs-on: macos-12
+            arch: amd64
+          - runs-on: macos-14
+            arch: arm64
 
-  darwin-m1:
-    name: Release Darwin M1 Binary
-    runs-on: macos-14
+    name: Release Darwin ${{ matrix.arch }} Binary
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -95,20 +74,25 @@ jobs:
           go-version: "1.22.x"
       - name: Build
         run: |
-          go build -ldflags="-s -w" -o bin/sage-darwin-arm64 .
+          go build -ldflags="-s -w" -o bin/sage-darwin-${{ matrix.arch }} -tags CI .
       - name: Package
         run: |
           mkdir -p SAGE.app/Contents/MacOS SAGE.app/Contents/Resources
-          cp bin/sage-darwin-arm64 SAGE.app/Contents/MacOS/SAGE
+          cp bin/sage-darwin-${{ matrix.arch }} SAGE.app/Contents/MacOS/SAGE
           cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
           cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
-          zip -r bin/sage-darwin-arm64.App.zip SAGE.app
+          mv -r SAGE.app bin/sage-darwin-${{ matrix.arch }}.app
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: sage-darwin-arm64
+          name: sage-darwin-${{ matrix.arch }}
           path: ./bin/sage-darwin-*
           if-no-files-found: error
+      - if: github.event_name == 'release'
+        name: ZIP it up
+        run: |
+          zip -r bin/sage-darwin-${{ matrix.arch }}.app.zip SAGE.app
+          rm -rf bin/sage-darwin-${{ matrix.arch }}.app
       - if: github.event_name == 'release'
         name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
