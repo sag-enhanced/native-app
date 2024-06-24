@@ -212,8 +212,7 @@ func (b *Bindings) RecoverConnect(secret string, data string, password string) e
 	}
 
 	identity.PrivateKey = privateKey.(*rsa.PrivateKey)
-	// TODO: save the identity
-	return nil
+	return identity.Save(b.fm)
 }
 
 type serverIntent struct {

@@ -37,6 +37,15 @@ func (identity *Identity) Unseal(data []byte) ([]byte, error) {
 	return helper.RSAUnseal(identity.PrivateKey, data)
 }
 
+func (identity *Identity) Save(fm *file.FileManager) error {
+	data, err := x509.MarshalPKCS8PrivateKey(identity.PrivateKey)
+	if err != nil {
+		return err
+	}
+	idFile := path.Join(fm.Options.DataDirectory, "sage2.id")
+	return fm.WriteFile(idFile, data, false)
+}
+
 func LoadIdentity(fm *file.FileManager) (*Identity, error) {
 	idFileNew := path.Join(fm.Options.DataDirectory, "sage2.id")
 	data, err := fm.ReadFile(idFileNew)
@@ -66,14 +75,10 @@ func LoadIdentity(fm *file.FileManager) (*Identity, error) {
 		return nil, err
 	}
 
-	data, err = x509.MarshalPKCS8PrivateKey(private)
-	if err != nil {
-		return nil, err
-	}
-	err = fm.WriteFile(idFileNew, data, false)
-	if err != nil {
+	id := &Identity{PrivateKey: private}
+	if err := id.Save(fm); err != nil {
 		return nil, err
 	}
 
-	return &Identity{PrivateKey: private}, nil
+	return id, nil
 }
