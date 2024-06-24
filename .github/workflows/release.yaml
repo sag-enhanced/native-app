@@ -81,7 +81,7 @@ jobs:
           cp bin/sage-darwin-${{ matrix.arch }} SAGE.app/Contents/MacOS/SAGE
           cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
           cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
-          mv -r SAGE.app bin/sage-darwin-${{ matrix.arch }}.app
+          mv SAGE.app bin/sage-darwin-${{ matrix.arch }}.app
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
