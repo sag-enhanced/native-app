@@ -125,9 +125,11 @@ func (b *Bindings) ApproveConnect(secret string, approveIntent string, password 
 		}
 
 		// now the RSA key is secured with the password
-		data := make([]byte, len(salt)+len(plaintext))
+		ciphertext := gcm.Seal(nil, salt[:gcm.NonceSize()], plaintext, nil)
+
+		data := make([]byte, len(salt)+len(ciphertext))
 		copy(data, salt)
-		gcm.Seal(data[len(salt):], salt[:gcm.NonceSize()], plaintext, nil)
+		copy(data[len(salt):], ciphertext)
 
 		// to prevent a compromise of id.sage.party just immediately decrypting the key
 		// using the password it knows, we encrypt the key with the server's public key as well
