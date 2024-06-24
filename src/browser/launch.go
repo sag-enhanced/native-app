@@ -27,8 +27,8 @@ func prepareArguments(profile string, proxy *url.URL) []string {
 }
 
 func prepareExtensions(args []string, extensions []string) []string {
-	for _, ext := range extensions {
-		args = append(args, "--load-extension="+ext)
+	if len(extensions) > 0 {
+		args = append(args, "--load-extension="+strings.Join(extensions, ","))
 	}
 	return args
 }
