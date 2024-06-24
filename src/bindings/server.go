@@ -58,7 +58,7 @@ func (b *Bindings) ServerNew() {
 			responseChannel := make(chan serverResponse)
 
 			serverRequestLock.Lock()
-			serverRequests[requestId] = responseChannel
+			serverRequests[request.Id] = responseChannel
 			serverRequestLock.Unlock()
 
 			b.ui.Eval(fmt.Sprintf("sages(%s, %d)", encoded, sequence))
