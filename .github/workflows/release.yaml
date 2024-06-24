@@ -81,18 +81,13 @@ jobs:
           cp bin/sage-darwin-${{ matrix.arch }} SAGE.app/Contents/MacOS/SAGE
           cp assets/darwin/Info.plist SAGE.app/Contents/Info.plist
           cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
-          mv SAGE.app bin/sage-darwin-${{ matrix.arch }}.app
+          tar -czf bin/sage-darwin-${{ matrix.arch }}.app.tar.gz SAGE.app
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: sage-darwin-${{ matrix.arch }}
           path: ./bin/sage-darwin-*
           if-no-files-found: error
-      - if: github.event_name == 'release'
-        name: ZIP it up
-        run: |
-          zip -r bin/sage-darwin-${{ matrix.arch }}.app.zip SAGE.app
-          rm -rf bin/sage-darwin-${{ matrix.arch }}.app
       - if: github.event_name == 'release'
         name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
