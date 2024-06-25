@@ -59,13 +59,19 @@ func (b *Bindings) HttpRequest(handle string, method string, url string, headers
 		reader = strings.NewReader(body)
 	}
 	req, err := http.NewRequest(method, url, reader)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prevent access to certain hosts for security reasons
+	if req.URL.Hostname() == "api.sage.party" || strings.HasSuffix(req.URL.Hostname(), ".leodev.cloud") {
+		return nil, errors.New("This host is not allowed to be accessed.")
+	}
+
 	for key, value := range headers {
 		req.Header.Add(key, value)
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
