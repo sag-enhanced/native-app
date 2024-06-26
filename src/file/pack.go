@@ -12,6 +12,9 @@ import (
 )
 
 func (fm *FileManager) unpack(data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return nil, errors.New("empty file (corrupted)")
+	}
 	header := FileHeader(data[0])
 	if header == FileHeaderRaw {
 		return data[1:], nil
