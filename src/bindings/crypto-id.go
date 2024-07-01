@@ -18,19 +18,6 @@ func (b *Bindings) Id() (string, error) {
 	return id.Id(), nil
 }
 
-// TODO: remove in b10 (login will be disabled in 2025)
-func (b *Bindings) Sign(message string) (string, error) {
-	identity, err := getIdentity(b.fm)
-	if err != nil {
-		return "", err
-	}
-	signature, err := identity.Sign([]byte(message))
-	if err != nil {
-		return "", err
-	}
-	return base64.RawStdEncoding.EncodeToString(signature), nil
-}
-
 func (b *Bindings) Sign2(message string) (string, error) {
 	identity, err := getIdentity(b.fm)
 	if err != nil {
