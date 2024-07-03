@@ -59,7 +59,14 @@ type EncryptionKey struct {
 func (fm *FileManager) ReadFile(filename string) ([]byte, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		// only load from the backup file if the main file is missing or otherwise unreadable
+		bkp := filename + ".bkp"
+		if content, err = os.ReadFile(bkp); err != nil {
+			return nil, err
+		}
+		if err = os.Rename(bkp, filename); err != nil {
+			return nil, err
+		}
 	}
 	return fm.unpack(content)
 }
@@ -75,7 +82,19 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 			return err
 		}
 	}
-	return os.WriteFile(filename, packed, 0644)
+	// we write to .bkp first to avoid corrupting the main file
+	// then delete the main file and rename the .bkp to the main file
+	bkp := filename + ".bkp"
+	if err := os.WriteFile(bkp, packed, 0644); err != nil {
+		return err
+	}
+	if err := os.Remove(filename); err != nil {
+		return err
+	}
+	if err := os.Rename(bkp, filename); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (fm *FileManager) UpdateFiles(ignoreCipher bool) []error {
