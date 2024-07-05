@@ -6,7 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/pem"
+	"encoding/base64"
 	"errors"
 	"os"
 	"path"
@@ -26,7 +26,7 @@ func (identity *Identity) Sign(data []byte) ([]byte, error) {
 
 func (identity *Identity) Id() string {
 	data := x509.MarshalPKCS1PublicKey(&identity.PrivateKey.PublicKey)
-	return string(pem.EncodeToMemory(&pem.Block{Type: "RSA PUBLIC KEY", Bytes: data}))
+	return base64.RawStdEncoding.EncodeToString(data)
 }
 
 func (identity *Identity) Seal(data []byte) ([]byte, error) {
