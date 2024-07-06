@@ -44,7 +44,7 @@ func (b *Bindings) Seal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	plaintext, err := base64.StdEncoding.DecodeString(data)
+	plaintext, err := base64.RawStdEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
 	}
@@ -52,7 +52,7 @@ func (b *Bindings) Seal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(sealed), nil
+	return base64.RawStdEncoding.EncodeToString(sealed), nil
 }
 
 func (b *Bindings) Unseal(data string) (string, error) {
@@ -60,7 +60,7 @@ func (b *Bindings) Unseal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	decoded, err := base64.StdEncoding.DecodeString(data)
+	decoded, err := base64.RawStdEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +68,7 @@ func (b *Bindings) Unseal(data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(unsealed), nil
+	return base64.RawStdEncoding.EncodeToString(unsealed), nil
 
 }
 func getIdentity(fm *file.FileManager) (*id.Identity, error) {
