@@ -21,5 +21,5 @@ func (b *Bindings) Open(target string) error {
 	fmt.Println("Opening URL", url.String())
 	// re-assemble url to string to avoid any funny business
 	helper.Open(url.String(), b.options)
-  return nil
+	return nil
 }

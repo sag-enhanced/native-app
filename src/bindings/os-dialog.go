@@ -18,16 +18,16 @@ func (b *Bindings) Save(filename string, data string) error {
 }
 
 func (b *Bindings) Save2(filename string, data string) error {
-  path, err := dialog.File().Title("Save file").SetStartFile(filename).Filter("All files", "*").Save()
-  if err != nil {
-    return err
-  }
+	path, err := dialog.File().Title("Save file").SetStartFile(filename).Filter("All files", "*").Save()
+	if err != nil {
+		return err
+	}
 
-  decoded, err := base64.RawStdEncoding.DecodeString(data)
-  if err != nil {
-    return err
-  }
-  return os.WriteFile(path, decoded, 0644)
+	decoded, err := base64.RawStdEncoding.DecodeString(data)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, decoded, 0644)
 }
 
 func (b *Bindings) Read(filterText string, filter string) (string, error) {
