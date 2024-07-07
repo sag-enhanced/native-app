@@ -18,7 +18,6 @@ func main() {
 	var releaseOverride int
 	var loopbackPort int
 	flag.StringVar(&opt.DataDirectory, "data", opt.DataDirectory, "Data directory to use")
-	flag.StringVar(&opt.RemotejsSession, "remote", "", "Allow remote debugging with the specified session ID.")
 	flag.StringVar(&opt.Realm, "realm", options.StableRealm, "Run the app in the specified realm")
 	flag.BoolVar(&opt.Verbose, "verbose", false, "Enable VERY verbose logging")
 	flag.StringVar(&openCommand, "open", "", "Command to open URLs")
@@ -46,18 +45,6 @@ func main() {
 	}
 	if opt.Realm != options.StableRealm {
 		fmt.Println("WARNING: Using experimental realm. This may cause issues.")
-	}
-
-	if opt.RemotejsSession != "" {
-		var allow string
-		fmt.Println("Debug session requested using -remote flag")
-		fmt.Println("A debug session will allow others to connect to your app and debug it remotely. Please make sure you are communicating with official staff.")
-		fmt.Print("Allow debug session? (y/N): ")
-		fmt.Scanln(&allow)
-		if allow != "y" && allow != "Y" {
-			fmt.Println("Aborted.")
-			return
-		}
 	}
 
 	start := time.Now()
