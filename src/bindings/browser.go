@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -85,7 +86,13 @@ func (b *Bindings) BrowserDestroy(handle string) {
 	browser.Stop <- "quit"
 }
 
-func (b *Bindings) BrowserDestroyProfile(browser string) error {
+func (b *Bindings) BrowserDestroyProfile(browser string, profileId string) error {
+	if strings.ContainsAny(browser+profileId, "/\\.;:") {
+		return errors.New("invalid browser name")
+	}
 	profilePath := path.Join(b.options.DataDirectory, "profiles", browser)
+	if profileId != "" {
+		profilePath = path.Join(profilePath, profileId)
+	}
 	return os.RemoveAll(profilePath)
 }
