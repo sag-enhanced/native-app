@@ -45,6 +45,7 @@ func (b *Bindings) Info() (map[string]any, error) {
 		"exe":      exe,
 		"exe_hash": exeHash,
 		"url":      url,
+		"ui":       b.options.UI,
 	}, nil
 }
 
