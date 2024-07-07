@@ -98,7 +98,7 @@ func (pwui *PlaywrightUII) Eval(code string) {
 	if pwui.options.Verbose {
 		fmt.Println("Eval:", code)
 	}
-	result := make(chan bool)
+	result := make(chan bool, 1)
 	pwui.mainThread <- func() {
 		pwui.page.Evaluate(code)
 		result <- true
