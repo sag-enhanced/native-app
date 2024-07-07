@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/playwright-community/playwright-go"
 	"github.com/sag-enhanced/native-app/src/options"
@@ -97,8 +98,20 @@ func (pwui *PlaywrightUII) Eval(code string) {
 	if pwui.options.Verbose {
 		fmt.Println("Eval:", code)
 	}
+	result := make(chan bool)
 	pwui.mainThread <- func() {
 		pwui.page.Evaluate(code)
+		result <- true
+	}
+
+	if pwui.options.Verbose {
+		go func() {
+			select {
+			case <-result:
+			case <-time.After(5 * time.Second):
+				fmt.Println("Eval timed out. Something is returning a promise that doesn't resolve. Please contact support.")
+			}
+		}()
 	}
 }
 
