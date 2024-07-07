@@ -15,7 +15,6 @@ func (b *Bindings) Get(key string) (string, error) {
 	if err == nil {
 		return string(data), nil
 	}
-	fmt.Println("Failed to read new file", filenameNew, err)
 
 	// fallback to old file (pre b7)
 	filenameOld := path.Join(b.options.DataDirectory, key+".dat")
