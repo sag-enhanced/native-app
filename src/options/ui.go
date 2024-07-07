@@ -1,7 +1,5 @@
 package options
 
-import "runtime"
-
 type UI = string
 
 const (
@@ -10,8 +8,8 @@ const (
 )
 
 func GetPreferredUI() UI {
-	if runtime.GOOS == "linux" {
-		return PlaywrightUI
+	if isWebviewAvailable() {
+		return WebviewUI
 	}
-	return WebviewUI
+	return PlaywrightUI
 }

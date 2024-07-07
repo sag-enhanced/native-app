@@ -3,9 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"runtime"
 	"strings"
-	"time"
 
 	"github.com/sag-enhanced/native-app/src"
 	"github.com/sag-enhanced/native-app/src/options"
@@ -47,19 +45,7 @@ func main() {
 		fmt.Println("WARNING: Using experimental realm. This may cause issues.")
 	}
 
-	start := time.Now()
-
 	if err := app.Run(opt); err != nil {
 		fmt.Println(err)
-	}
-
-	elapsed := time.Since(start)
-	if elapsed.Seconds() < 2 {
-		fmt.Println("App exited too quickly. Everything ok?")
-		if runtime.GOOS == "windows" {
-			fmt.Println("Windows 10 users need to install the following program:")
-			fmt.Println("https://developer.microsoft.com/en-us/microsoft-edge/webview2/")
-			fmt.Scanln()
-		}
 	}
 }
