@@ -42,7 +42,6 @@ func main() {
 		opt.Release = uint32(releaseOverride)
 	}
 	if loopbackPort != -1 {
-		fmt.Println("WARNING: Loopback port override is not recommended and may cause issues.")
 		opt.LoopbackPort = uint16(loopbackPort)
 	}
 	if opt.Realm != options.StableRealm {

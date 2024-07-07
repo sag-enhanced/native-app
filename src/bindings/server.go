@@ -14,14 +14,15 @@ var server *http.Server
 var serverRequests = make(map[int]chan serverResponse)
 var serverRequestLock = sync.Mutex{}
 
-func (b *Bindings) ServerNew() {
+func (b *Bindings) ServerNew() string {
+	addr := fmt.Sprintf("127.0.0.1:%d", b.options.LoopbackPort)
 	if server != nil {
-		return
+		return addr
 	}
 
 	requestId := 0
 	server = &http.Server{
-		Addr: fmt.Sprintf("127.0.0.1:%d", b.options.LoopbackPort),
+		Addr: addr,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, err := io.ReadAll(r.Body)
 			defer r.Body.Close()
@@ -87,6 +88,7 @@ func (b *Bindings) ServerNew() {
 	}
 
 	go server.ListenAndServe()
+	return addr
 }
 
 func (b *Bindings) ServerRespond(requestId int, statusCode int, headers map[string]string, body string) error {
