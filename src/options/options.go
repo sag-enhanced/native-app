@@ -27,7 +27,7 @@ func NewOptions() *Options {
 
 	return &Options{
 		Build:        10,
-		Release:      1,
+		Release:      2,
 		LoopbackPort: 8666,
 
 		UI:            GetPreferredUI(),
