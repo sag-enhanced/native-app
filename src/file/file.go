@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/sag-enhanced/native-app/src/options"
 )
@@ -19,6 +20,8 @@ const (
 	FileHeaderCompressed     FileHeader = 0x2
 	FileHeaderEncryptedNoPad FileHeader = 0x3
 )
+
+var fileWriterLock = sync.Mutex{}
 
 type FileManager struct {
 	Manifest *EncryptionManifest
@@ -76,6 +79,8 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 	if err != nil {
 		return err
 	}
+	fileWriterLock.Lock()
+	defer fileWriterLock.Unlock()
 	parent := path.Dir(filename)
 	if _, err := os.Stat(parent); os.IsNotExist(err) {
 		if err := os.MkdirAll(parent, 0755); err != nil {
