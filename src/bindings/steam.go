@@ -34,7 +34,10 @@ func (b *Bindings) SteamPatch(js string) error {
 	}
 
 	// inject our code into the steam client
-	lines := strings.Split(string(content), "\n")[:3]
+	lines := strings.Split(string(content), "\n")
+	if len(lines) > 2 {
+		lines = lines[:3]
+	}
 	if js != "" {
 		lines = append(lines, js)
 	}
