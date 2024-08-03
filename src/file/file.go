@@ -93,7 +93,7 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 	if err := os.WriteFile(bkp, packed, 0644); err != nil {
 		return err
 	}
-	if err := os.Remove(filename); err != nil {
+	if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 	if err := os.Rename(bkp, filename); err != nil {
