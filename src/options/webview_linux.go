@@ -2,9 +2,12 @@
 
 package options
 
-// webview *is* available, but for some reason it's using HTTP/1.1 instead of HTTP/2
-// when connecting to the server. This will be rejected by the server, so we'lL
-// disable it for now.
+import "os"
+
+// sage requires webkit2gtk-4.1-dev to be installed, otherwise it'll segfault when trying to use webview
 func isWebviewAvailable() bool {
+  if _, err := os.Stat("/usr/include/webkit2gtk-4.1"); err == nil {
+    return true
+  }
 	return false
 }
