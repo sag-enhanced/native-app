@@ -25,6 +25,7 @@ func main() {
 	flag.IntVar(&buildOverride, "build", -1, "Override/spoof build number (NOT RECOMMENDED)")
 	flag.IntVar(&releaseOverride, "release", -1, "Override/spoof release number (NOT RECOMMENDED)")
 	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d) (NOT RECOMMENDED)", opt.LoopbackPort))
+	flag.StringVar(&opt.ForceBrowser, "forcebrowser", "", "Force a specific browser to be used (specify full executable path)")
 	flag.Parse()
 
 	if openCommand != "" {

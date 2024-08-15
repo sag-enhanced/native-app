@@ -23,9 +23,15 @@ func RunBrowser(ch *BrowserChannels, options *options.Options, url string, code 
 		args = prepareExtensions(args, extensions)
 	}
 
-	exe, err := findBrowserBinary(browser)
-	if err != nil {
-		return err
+	var exe string
+	if options.ForceBrowser != "" {
+		exe = options.ForceBrowser
+	} else {
+		var err error
+		exe, err = findBrowserBinary(browser)
+		if err != nil {
+			return err
+		}
 	}
 
 	devtoolsPortFile := path.Join(profile, "DevToolsActivePort")

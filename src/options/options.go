@@ -17,6 +17,7 @@ type Options struct {
 	SteamDev      bool
 	DataDirectory string
 	NoCompress    bool
+	ForceBrowser  string
 
 	CurrentUrlSecret string
 }
