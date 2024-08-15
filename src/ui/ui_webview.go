@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sag-enhanced/native-app/src/options"
-	webview_go "github.com/webview/webview_go"
+	webview_go "github.com/sag-enhanced/webview_go"
 )
 
 type WebviewUII struct {

@@ -11,10 +11,11 @@ require (
 	github.com/kbinani/screenshot v0.0.0-20230812210009-b87d31814237
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/playwright-community/playwright-go v0.4401.1
+	github.com/sag-enhanced/webview_go v0.0.0-20240815072320-127806c5f14b
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sqweek/dialog v0.0.0-20240226140203-065105509627
-	github.com/webview/webview_go v0.0.0-20240220051247-56f456ca3a43
 	golang.org/x/crypto v0.25.0
+	golang.org/x/sys v0.22.0
 )
 
 require (
@@ -44,7 +45,6 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
-	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 )

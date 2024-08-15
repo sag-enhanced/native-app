@@ -8,7 +8,8 @@ To build the app, you need to have the go compiler installed. You can download
 it from [here](https://golang.org/dl/).
 
 On linux, you will also need to install
-[GTK related libraries](https://github.com/webview/webview?tab=readme-ov-file#prerequisites).
+[GTK related libraries](https://github.com/webview/webview?tab=readme-ov-file#prerequisites)
+(make sure to use version 4.1).
 
 Once you have the go compiler installed, you can run the following command to
 build the app:
