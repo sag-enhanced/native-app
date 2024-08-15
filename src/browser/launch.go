@@ -5,19 +5,14 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path"
-	"strconv"
 	"strings"
-	"time"
 )
 
 func prepareArguments(profile string, proxy *url.URL) []string {
 	args := []string{
-		"--remote-debugging-port=0",
 		"--user-data-dir=" + profile,
 		"--no-first-run",
 		"--use-mock-keychain", // required or macOS will prompt for keychain access
-		"--remote-allow-origins=http://127.0.0.1/",
 	}
 	if proxy != nil {
 		// we cant pass the authentication information to the browser here
@@ -42,24 +37,4 @@ func launchBrowser(exe string, args []string) (*os.Process, error) {
 		return nil, err
 	}
 	return cmd.Process, nil
-}
-
-func waitForDevToolsActivePort(profile string) (int, error) {
-	devtoolsPortFile := path.Join(profile, "DevToolsActivePort")
-	for i := 0; i < 100; i++ {
-		if _, err := os.Stat(devtoolsPortFile); err == nil {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	content, err := os.ReadFile(devtoolsPortFile)
-	if err != nil {
-		return 0, err
-	}
-
-	port, err := strconv.Atoi(strings.Split(string(content), "\n")[0])
-	if err != nil {
-		return 0, err
-	}
-	return port, nil
 }
