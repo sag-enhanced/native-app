@@ -10,29 +10,29 @@ import (
 )
 
 func RunBrowser(stop context.Context, options *options.Options, browserUrl string, browser string, proxy *url.URL, profileId int32) error {
-  var err error
+	var err error
 
 	profile := path.Join(options.DataDirectory, "profiles", browser, fmt.Sprint(profileId))
 
-  var localProxy *url.URL
-  if proxy != nil {
-    if options.Verbose {
-      fmt.Println("Creating proxy for proxy", proxy)
-    }
-    localProxy, err = createProxyProxy(proxy, options, stop)
-    if err != nil {
-      return err
-    }
-    if options.Verbose {
-      fmt.Println("Created proxy", localProxy)
-    }
-  }
+	var localProxy *url.URL
+	if proxy != nil {
+		if options.Verbose {
+			fmt.Println("Creating proxy for proxy", proxy)
+		}
+		localProxy, err = createProxyProxy(proxy, options, stop)
+		if err != nil {
+			return err
+		}
+		if options.Verbose {
+			fmt.Println("Created proxy", localProxy)
+		}
+	}
 
 	args := prepareArguments(profile, localProxy)
 	if extensions, err := getExtensionList(options, browser); err == nil {
 		args = prepareExtensions(args, extensions)
 	}
-  args = append(args, browserUrl)
+	args = append(args, browserUrl)
 
 	var exe string
 	if options.ForceBrowser != "" {
@@ -55,16 +55,16 @@ func RunBrowser(stop context.Context, options *options.Options, browserUrl strin
 	}
 	defer proc.Kill()
 
-  processDone := make(chan struct{})
-  go func() {
-    proc.Wait()
-    close(processDone)
-  }()
+	processDone := make(chan struct{})
+	go func() {
+		proc.Wait()
+		close(processDone)
+	}()
 
-  select {
-  case <-stop.Done():
-  case <-processDone:
-  }
+	select {
+	case <-stop.Done():
+	case <-processDone:
+	}
 
-  return nil
+	return nil
 }

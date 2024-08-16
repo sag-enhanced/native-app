@@ -35,25 +35,25 @@ func (b *Bindings) BrowserNew(pageUrl string, browser string, proxy *string, pro
 		}
 	}
 
-  if _, err := url.Parse(pageUrl); err != nil {
-    return "", err
-  }
+	if _, err := url.Parse(pageUrl); err != nil {
+		return "", err
+	}
 
-  cancelCtx, cancel := context.WithCancel(context.Background())
+	cancelCtx, cancel := context.WithCancel(context.Background())
 
 	go func() {
-    defer cancel()
-    defer func() {
-      browserHandleLock.Lock()
-      defer browserHandleLock.Unlock()
-      delete(browserHandles, handle)
+		defer cancel()
+		defer func() {
+			browserHandleLock.Lock()
+			defer browserHandleLock.Unlock()
+			delete(browserHandles, handle)
 
-      if b.options.Verbose {
-        fmt.Println("Destroying browser instance with handle", handle)
-      }
+			if b.options.Verbose {
+				fmt.Println("Destroying browser instance with handle", handle)
+			}
 
-      b.ui.Eval(fmt.Sprintf("sagebd(%q)", handle))
-    }()
+			b.ui.Eval(fmt.Sprintf("sagebd(%q)", handle))
+		}()
 		err := browserAPI.RunBrowser(cancelCtx, b.options, pageUrl, browser, parsedProxy, profileId)
 		if err != nil {
 			fmt.Println("Error running browser:", err)
@@ -77,7 +77,7 @@ func (b *Bindings) BrowserDestroy(handle string) {
 	if b.options.Verbose {
 		fmt.Println("Destroying browser instance with handle", handle)
 	}
-  cancelCtx()
+	cancelCtx()
 }
 
 func (b *Bindings) BrowserDestroyProfile(browser string, profileId string) error {
