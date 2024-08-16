@@ -7,7 +7,7 @@ import (
 	"net/url"
 
 	"github.com/sag-enhanced/native-app/src/options"
-	_ "github.com/wzshiming/anyproxy/proxies/httpproxy"
+	_ "github.com/wzshiming/anyproxy/proxies/socks5"
 	"github.com/wzshiming/bridge/chain"
 	"github.com/wzshiming/bridge/config"
 	"github.com/wzshiming/bridge/logger"
@@ -25,7 +25,7 @@ func createProxyProxy(proxy *url.URL, options *options.Options, stop context.Con
 	}
 
 	localProxy := &url.URL{
-		Scheme: "http",
+		Scheme: "socks5",
 		Host:   fmt.Sprintf("127.0.0.1:%d", freePort),
 	}
 	if options.Verbose {
