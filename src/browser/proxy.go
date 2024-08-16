@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"time"
 
 	"github.com/sag-enhanced/native-app/src/options"
 	_ "github.com/wzshiming/anyproxy/proxies/socks5"
@@ -46,7 +47,7 @@ func createProxyProxy(proxy *url.URL, options *options.Options, stop context.Con
 				LB: []string{proxy.String()},
 			},
 		},
-		IdleTimeout: 120,
+		IdleTimeout: 120 * time.Second,
 	}
 	b := chain.NewBridge(logger.Std, false)
 
