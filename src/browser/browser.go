@@ -14,9 +14,23 @@ func RunBrowser(stop context.Context, options *options.Options, browserUrl strin
 
 	profile := path.Join(options.DataDirectory, "profiles", browser, fmt.Sprint(profileId))
 
-	args := prepareArguments(profile, proxy)
+	var args []string
+	if browser == "firefox" {
+		args, err = prepareFirefoxArguments(profile, proxy)
+		if err != nil {
+			return err
+		}
+	} else {
+		args = prepareChromiumArguments(profile, proxy)
+	}
 	if extensions, err := getExtensionList(options, browser); err == nil {
-		args = prepareExtensions(args, extensions)
+		if browser == "firefox" {
+			if err := prepareFirefoxExtensions(profile, extensions); err != nil {
+				return err
+			}
+		} else {
+			args = prepareChromiumExtensions(args, extensions)
+		}
 	}
 	args = append(args, browserUrl)
 
