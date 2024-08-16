@@ -14,30 +14,14 @@ func RunBrowser(stop context.Context, options *options.Options, browserUrl strin
 
 	profile := path.Join(options.DataDirectory, "profiles", browser, fmt.Sprint(profileId))
 
-	var localProxy *url.URL
-	if proxy != nil {
-		if options.Verbose {
-			fmt.Println("Creating proxy for proxy", proxy)
-		}
-		localProxy, err = createProxyProxy(proxy, options, stop)
-		if err != nil {
-			return err
-		}
-		if options.Verbose {
-			fmt.Println("Created proxy", localProxy)
-		}
-	}
-
-	args := prepareArguments(profile, localProxy)
+	args := prepareArguments(profile, proxy)
 	if extensions, err := getExtensionList(options, browser); err == nil {
 		args = prepareExtensions(args, extensions)
 	}
 	args = append(args, browserUrl)
 
-	var exe string
-	if options.ForceBrowser != "" {
-		exe = options.ForceBrowser
-	} else {
+	exe := options.ForceBrowser
+	if exe == "" {
 		var err error
 		exe, err = findBrowserBinary(browser)
 		if err != nil {

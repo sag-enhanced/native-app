@@ -32,6 +32,9 @@ func (b *Bindings) HttpClient(proxyUrl *string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if parsedProxyUrl.Hostname() != "127.0.0.1" {
+			return "", errors.New("Only local proxies are allowed.")
+		}
 		proxy = http.ProxyURL(parsedProxyUrl)
 	}
 

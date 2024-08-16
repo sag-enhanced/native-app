@@ -1,10 +1,12 @@
-package browser
+package bindings
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"net"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/sag-enhanced/native-app/src/options"
@@ -18,6 +20,50 @@ import (
 	_ "github.com/wzshiming/bridge/protocols/ssh"
 	_ "github.com/wzshiming/bridge/protocols/tls"
 )
+
+var proxyClients = make(map[string]context.CancelFunc)
+var proxyHandleLock = sync.Mutex{}
+
+func (b *Bindings) CreateProxy(proxyUrl string) (string, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	parsedProxyUrl, err := url.Parse(proxyUrl)
+	if err != nil {
+		return "", err
+	}
+
+	rawHandle := make([]byte, 16)
+	if _, err := rand.Read(rawHandle); err != nil {
+		return "", err
+	}
+
+	handle := fmt.Sprintf("%x", rawHandle)
+
+	localProxy, err := createProxyProxy(parsedProxyUrl, b.options, ctx)
+	if err != nil {
+		return "", err
+	}
+	if b.options.Verbose {
+		fmt.Println("Created new proxy with handle", handle, proxyUrl, localProxy)
+	}
+
+	proxyHandleLock.Lock()
+	proxyClients[handle] = cancel
+	proxyHandleLock.Unlock()
+
+	return localProxy.String(), nil
+}
+
+func (b *Bindings) DestroyProxy(handle string) error {
+	proxyHandleLock.Lock()
+	cancel, ok := proxyClients[handle]
+	proxyHandleLock.Unlock()
+	if !ok {
+		return fmt.Errorf("invalid handle %s", handle)
+	}
+	cancel()
+	return nil
+}
 
 func createProxyProxy(proxy *url.URL, options *options.Options, stop context.Context) (*url.URL, error) {
 	freePort, err := getFreePort()

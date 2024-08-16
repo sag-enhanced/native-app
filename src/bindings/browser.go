@@ -33,6 +33,9 @@ func (b *Bindings) BrowserNew(pageUrl string, browser string, proxy *string, pro
 		if err != nil {
 			return "", err
 		}
+		if parsedProxy.Hostname() != "127.0.0.1" {
+			return "", errors.New("Only local proxies are allowed.")
+		}
 	}
 
 	if _, err := url.Parse(pageUrl); err != nil {
