@@ -83,13 +83,13 @@ func (b *Bindings) BrowserDestroy(handle string) {
 	cancelCtx()
 }
 
-func (b *Bindings) BrowserDestroyProfile(browser string, profileId string) error {
-	if strings.ContainsAny(browser+profileId, "/\\.;:") {
+func (b *Bindings) BrowserDestroyProfile(browser string, profileId int32) error {
+	if strings.ContainsAny(browser+fmt.Sprint(profileId), "/\\.;:") {
 		return errors.New("invalid browser name")
 	}
 	profilePath := path.Join(b.options.DataDirectory, "profiles", browser)
-	if profileId != "" {
-		profilePath = path.Join(profilePath, profileId)
+	if profileId > 0 {
+		profilePath = path.Join(profilePath, fmt.Sprint(profileId))
 	}
 	return os.RemoveAll(profilePath)
 }
