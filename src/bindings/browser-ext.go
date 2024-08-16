@@ -52,9 +52,7 @@ func (b *Bindings) ExtInstall(name string, browser string, download string) erro
 		return errors.New("invalid extension name")
 	}
 
-	installExtensionFromGithub(name, browser, download, b.options)
-
-	return nil
+	return installExtensionFromGithub(name, browser, download, b.options)
 }
 
 func (b *Bindings) ExtGetManifest(name string, browser string) (string, error) {
@@ -133,6 +131,9 @@ func installExtensionFromGithub(name string, browser string, download string, op
 			_, err = io.Copy(newFile, zipFile)
 			newFile.Close()
 			zipFile.Close()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
