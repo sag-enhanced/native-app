@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -12,7 +13,12 @@ func prepareArguments(profile string, proxy *url.URL) []string {
 	args := []string{
 		"--user-data-dir=" + profile,
 		"--no-first-run",
-		"--use-mock-keychain", // required or macOS will prompt for keychain access
+		"--disable-search-engine-choice-screen", // disable search engine choice screen
+		"--new-window",
+	}
+	if runtime.GOOS == "darwin" {
+		// removes the keychain prompt
+		args = append(args, "--use-mock-keychain")
 	}
 	if proxy != nil {
 		// we cant pass the authentication information to the browser here
