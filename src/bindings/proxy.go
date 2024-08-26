@@ -34,6 +34,7 @@ func (b *Bindings) ProxyNew(proxyUrl string) (string, error) {
 
 	localProxy, err := createProxyProxy(parsedProxyUrl, b.options, ctx)
 	if err != nil {
+		cancel()
 		return "", err
 	}
 	if b.options.Verbose {
