@@ -65,7 +65,11 @@ func (fm *FileManager) ReadFile(filename string) ([]byte, error) {
 		// only load from the backup file if the main file is missing or otherwise unreadable
 		bkp := filename + ".bkp"
 		if content, err = os.ReadFile(bkp); err != nil {
-			return nil, err
+			// if we have no backup file, try the .tmp file
+			bkp = filename + ".tmp"
+			if content, err = os.ReadFile(bkp); err != nil {
+				return nil, err
+			}
 		}
 		if err = os.Rename(bkp, filename); err != nil {
 			return nil, err
@@ -87,16 +91,17 @@ func (fm *FileManager) WriteFile(filename string, data []byte, ignoreCipher bool
 			return err
 		}
 	}
-	// we write to .bkp first to avoid corrupting the main file
-	// then delete the main file and rename the .bkp to the main file
+	// we write to .tmp first to avoid corrupting the main file
+	// then move the main file to .tmp and the .tmp to the main file
+	tmp := filename + ".tmp"
+	if err := os.WriteFile(tmp, packed, 0644); err != nil {
+		return err
+	}
 	bkp := filename + ".bkp"
-	if err := os.WriteFile(bkp, packed, 0644); err != nil {
+	if err := os.Rename(filename, bkp); err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if err := os.Remove(filename); err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	if err := os.Rename(bkp, filename); err != nil {
+	if err := os.Rename(tmp, filename); err != nil {
 		return err
 	}
 	return nil
