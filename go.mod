@@ -1,8 +1,6 @@
 module github.com/sag-enhanced/native-app
 
-go 1.22
-
-toolchain go1.22.6
+go 1.24
 
 require (
 	github.com/denisbrodbeck/machineid v1.0.1
