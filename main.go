@@ -6,10 +6,21 @@ import (
 	"strings"
 
 	"github.com/sag-enhanced/native-app/src"
+	"github.com/sag-enhanced/native-app/src/isadmin"
 	"github.com/sag-enhanced/native-app/src/options"
 )
 
 func main() {
+	if isadmin.IsAdmin() {
+		if runtime.GOOS == "windows" {
+			// if you start a HTTP server as admin on Windows, it won't be accessible to non-admin users.
+			// this breaks a lot of things, so we exit early and tell the user to run without admin privileges.
+			fmt.Println("Running as administrator is not supported on Windows. Please run without admin privileges.")
+			os.Exit(1)
+		}
+		fmt.Println("Running as root is not recommended. SAGE does not need root privileges to function properly.")
+	}
+
 	opt := options.NewOptions()
 	var openCommand string
 	var buildOverride int
