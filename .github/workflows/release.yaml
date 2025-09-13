@@ -44,6 +44,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24.x"
+      - name: Get RSVC
+        run: |
+          go install github.com/akavel/rsrc
+      - name: Combine Windows resources
+        run: |
+          rsrc -manifest assets/windows/manifest.xml -ico assets/windows/icon.ico -o sage.syso
+          cat sage.syso
       - name: Build
         run: |
           go build -ldflags="-s -w" -o bin/sage-windows-amd64.exe .

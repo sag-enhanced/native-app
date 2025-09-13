@@ -4,7 +4,9 @@
 *.dll
 *.so
 *.dylib
+*.syso
 native-app
+.DS_Store
 
 # Test binary, built with `go test -c`
 *.test
