@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"runtime"
 
 	"github.com/sag-enhanced/native-app/src"
 	"github.com/sag-enhanced/native-app/src/isadmin"
