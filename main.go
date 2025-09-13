@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"os"
 	"runtime"
 
 	"github.com/sag-enhanced/native-app/src"
