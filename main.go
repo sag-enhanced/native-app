@@ -12,6 +12,20 @@ import (
 	"github.com/sag-enhanced/native-app/src/options"
 )
 
+var defaultProxyBypassList = []string{
+	// SAGE
+	"*.sage.party",
+	"*.leodev.cloud",
+	"*.sagemail.top",
+
+	// Brave browser
+	"*.brave.com",
+	"*.brave-http-only.com",
+
+	// Captcha solvers
+	"*.nopecha.com",
+}
+
 func main() {
 	if isadmin.IsAdmin() {
 		if runtime.GOOS == "windows" {
@@ -39,7 +53,7 @@ func main() {
 	flag.IntVar(&releaseOverride, "release", -1, "Override/spoof release number (NOT RECOMMENDED)")
 	flag.IntVar(&loopbackPort, "loopback", -1, fmt.Sprintf("Port to use for loopback connections (default: %d) (NOT RECOMMENDED)", opt.LoopbackPort))
 	flag.StringVar(&opt.ForceBrowser, "forcebrowser", "", "Force a specific browser to be used (specify full executable path)")
-	flag.StringVar(&opt.ProxyBypassList, "proxybypasslist", "", "Bypass any specified proxy for the given semi-colon-separated list of hosts")
+	flag.StringVar(&opt.ProxyBypassList, "proxybypasslist", strings.Join(defaultProxyBypassList, ";"), "Bypass any specified proxy for the given semi-colon-separated list of hosts")
 	flag.Parse()
 
 	if openCommand != "" {
