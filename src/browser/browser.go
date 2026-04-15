@@ -29,7 +29,7 @@ func RunBrowser(stop context.Context, options *options.Options, browserUrl strin
 		}
 	}
 
-	if options.ProxyBypassList != "" && proxy != nil {
+	if options.ProxyBypassList != "" && options.ProxyBypassList != "-" && proxy != nil {
 		args = append(args, "--proxy-bypass-list="+options.ProxyBypassList)
 	}
 
