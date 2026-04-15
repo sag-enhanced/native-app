@@ -10,14 +10,15 @@ type Options struct {
 	Release      uint32
 	LoopbackPort uint16
 
-	Verbose       bool
-	Realm         Realm
-	OpenCommand   []string
-	UI            UI
-	SteamDev      bool
-	DataDirectory string
-	NoCompress    bool
-	ForceBrowser  string
+	Verbose         bool
+	Realm           Realm
+	OpenCommand     []string
+	UI              UI
+	SteamDev        bool
+	DataDirectory   string
+	NoCompress      bool
+	ForceBrowser    string
+	ProxyBypassList string
 
 	CurrentUrlSecret string
 }
