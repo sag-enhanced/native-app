@@ -71,10 +71,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - runs-on: macos-13
-            arch: amd64
-          - runs-on: macos-14
+          - runs-on: macos-26
             arch: arm64
+          - runs-on: macos-26-intel
+            arch: amd64
 
     name: Release Darwin ${{ matrix.arch }} Binary
     runs-on: ${{ matrix.runs-on }}
