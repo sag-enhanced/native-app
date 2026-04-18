@@ -28,7 +28,7 @@ func NewOptions() *Options {
 	rand.Read(secret) // let's pray this doesn't fail
 
 	return &Options{
-		Build:        14,
+		Build:        15,
 		Release:      4,
 		LoopbackPort: 8666,
 
