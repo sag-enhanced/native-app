@@ -12,10 +12,10 @@ jobs:
     name: Release Linux Binary
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24.x"
+          go-version: "1.27.x"
       - name: Install webview dependencies
         run: |
           sudo apt-get update
@@ -24,14 +24,14 @@ jobs:
         run: |
           go build -ldflags="-s -w" -o bin/sage-linux-amd64 .
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sage-linux-amd64
           path: ./bin/sage-linux-*
           if-no-files-found: error
       - if: github.event_name == 'release'
         name: Upload assets to release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.11.3
         with:
           file: ./bin/sage-linux-*
           file_glob: true
@@ -40,10 +40,10 @@ jobs:
     name: Release Windows Binary
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24.x"
+          go-version: "1.27.x"
       - name: Get RSVC
         run: |
           go install github.com/akavel/rsrc@latest
@@ -55,14 +55,14 @@ jobs:
         run: |
           go build -ldflags="-s -w" -o bin/sage-windows-amd64.exe .
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sage-windows-amd64
           path: ./bin/sage-windows-*
           if-no-files-found: error
       - if: github.event_name == 'release'
         name: Upload assets to release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.11.3
         with:
           file: ./bin/sage-windows-*
           file_glob: true
@@ -79,10 +79,10 @@ jobs:
     name: Release Darwin ${{ matrix.arch }} Binary
     runs-on: ${{ matrix.runs-on }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24.x"
+          go-version: "1.27.x"
       - name: Build
         run: |
           go build -ldflags="-s -w" -o bin/sage-darwin-${{ matrix.arch }} -tags CI .
@@ -94,14 +94,14 @@ jobs:
           cp assets/darwin/icon.icns SAGE.app/Contents/Resources/icon.icns
           tar -czf bin/sage-darwin-${{ matrix.arch }}.app.tar.gz SAGE.app
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sage-darwin-${{ matrix.arch }}
           path: ./bin/sage-darwin-*
           if-no-files-found: error
       - if: github.event_name == 'release'
         name: Upload assets to release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.11.3
         with:
           file: ./bin/sage-darwin-*
           file_glob: true
