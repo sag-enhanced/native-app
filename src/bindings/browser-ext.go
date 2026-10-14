@@ -7,9 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/sag-enhanced/native-app/src/options"
@@ -45,14 +48,48 @@ func (b *Bindings) Ext(browser string) (*map[string]string, error) {
 }
 
 func (b *Bindings) ExtInstall(name string, browser string, download string) error {
-	if !strings.HasPrefix(download, "https://github.com/") || strings.Contains(download, "..") {
+	if err := validatePublicDownloadURL(download); err != nil {
 		return errors.New("invalid download URL")
 	}
 	if path.Clean(name) != name || strings.Contains(name, ",") {
 		return errors.New("invalid extension name")
 	}
 
-	return installExtensionFromGithub(name, browser, download, b.options)
+	return installExtensionFromURL(name, browser, download, b.options)
+}
+
+func validatePublicDownloadURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || strings.Contains(u.Path, "..") {
+		return errors.New("invalid download URL")
+	}
+
+	host := strings.ToLower(strings.TrimSuffix(u.Hostname(), "."))
+	if host == "localhost" || strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".local") || strings.HasSuffix(host, ".internal") || host == "home.arpa" || strings.HasSuffix(host, ".home.arpa") {
+		return errors.New("invalid download URL")
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		if !isPublicIP(ip) {
+			return errors.New("invalid download URL")
+		}
+		return nil
+	}
+
+	ips, err := net.LookupIP(host)
+	if err != nil || len(ips) == 0 {
+		return errors.New("invalid download URL")
+	}
+	for _, ip := range ips {
+		if !isPublicIP(ip) {
+			return errors.New("invalid download URL")
+		}
+	}
+	return nil
+}
+
+func isPublicIP(ip net.IP) bool {
+	return ip.IsGlobalUnicast() && !ip.IsPrivate() && !ip.IsLoopback() && !ip.IsLinkLocalUnicast() && !ip.IsLinkLocalMulticast() && !ip.IsUnspecified() && !ip.IsMulticast()
 }
 
 func (b *Bindings) ExtGetManifest(name string, browser string) (string, error) {
@@ -91,8 +128,19 @@ type Manifest struct {
 	Version string `json:"version"`
 }
 
-func installExtensionFromGithub(name string, browser string, download string, options *options.Options) error {
-	resp, err := http.Get(download)
+func installExtensionFromURL(name string, browser string, download string, options *options.Options) error {
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("too many redirects")
+			}
+			if err := validatePublicDownloadURL(req.URL.String()); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+	resp, err := client.Get(download)
 	if err != nil {
 		return err
 	}
@@ -103,37 +151,68 @@ func installExtensionFromGithub(name string, browser string, download string, op
 
 	dir := path.Join(options.DataDirectory, "ext", browser, name)
 
-	os.MkdirAll(dir, 0755)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	reader, err := zip.NewReader(bytes.NewReader(body), resp.ContentLength)
+	reader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		return err
 	}
 
 	for _, file := range reader.File {
-		if file.FileInfo().IsDir() {
-			os.MkdirAll(path.Join(dir, file.Name), 0755)
-		} else {
-			newFile, err := os.OpenFile(path.Join(dir, file.Name), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-			if err != nil {
-				return err
-			}
-			zipFile, err := file.Open()
-			if err != nil {
-				return err
-			}
+		// ZIP entry names always use slash separators. Reject paths that could
+		// escape the extension directory on either Unix or Windows.
+		entryName := file.Name
+		cleanName := path.Clean(entryName)
+		firstComponent := strings.SplitN(cleanName, "/", 2)[0]
+		if strings.Contains(entryName, "\\") || strings.Contains(firstComponent, ":") || path.IsAbs(cleanName) || cleanName == ".." || strings.HasPrefix(cleanName, "../") {
+			return fmt.Errorf("invalid ZIP entry path %q", entryName)
+		}
+		if cleanName == "." {
+			continue
+		}
 
-			_, err = io.Copy(newFile, zipFile)
-			newFile.Close()
-			zipFile.Close()
-			if err != nil {
+		target := filepath.Join(dir, filepath.FromSlash(cleanName))
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(target, 0755); err != nil {
 				return err
 			}
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return err
+		}
+		mode := file.Mode().Perm()
+		if mode == 0 {
+			mode = 0644
+		}
+		newFile, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
+		if err != nil {
+			return err
+		}
+		zipFile, err := file.Open()
+		if err != nil {
+			newFile.Close()
+			return err
+		}
+		_, copyErr := io.Copy(newFile, zipFile)
+		closeErr := newFile.Close()
+		zipCloseErr := zipFile.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+		if zipCloseErr != nil {
+			return zipCloseErr
 		}
 	}
 
