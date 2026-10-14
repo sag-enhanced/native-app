@@ -11,7 +11,7 @@ import (
 
 	"github.com/sag-enhanced/native-app/src/helper"
 	"github.com/sag-enhanced/native-app/src/options"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 // looking where the steam executable is from currently running processes
